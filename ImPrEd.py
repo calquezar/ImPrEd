@@ -22,8 +22,35 @@ vertices = vor.vertices
 edges = [ x for x in vor.ridge_vertices if -1 not in x ]
 regions = [ x for x in vor.regions if -1 not in x ][1:] # hay que asegurarse que el primer elementos es [] siempre
 #########################################################
-# Creamos la clase Sv
+#Forces
+delta = 1
+gamma = 1
 
+def dist(v1,v2):
+  return math.sqrt((v1[0]-v2[0])**2+(v1[1]-v2[1])**2)
+# Fuerza de repulsion entre vertices
+def fRep(v1,v2,delta=1):
+  d = dist(v1,v2)
+  fx = ((delta/d)**2)*(v1[0]-v2[0])
+  fy = ((delta/d)**2)*(v1[1]-v2[1])
+  return [fx,fy]
+# Fuerza de atracción entre vertices conectados
+def fattract(v1,v2,delta=1):
+  d = dist(v1,v2)
+  fx = (d/delta)*(v2[0]-v1[0])
+  fy = (d/delta)*(v2[1]-v1[1])
+  return [fx,fy]
+# Fuerza de repulsión entre vertice y arista. Ve es la proyección de v sobre e
+def fvEdge(v,ve,gamma=1):
+  d = dist(v,ve)
+  fx=0
+  fy=0
+  if(d<gamma):
+   fx = (((gamma-d)**2)/d)*(v[0]-ve[0])
+   fy = (((gamma-d)**2)/d)*(v[1]-ve[1])
+  return [fx,fy]
+#########################################################
+# Sv class
 class Sv:
   def __init__(self,v,e,c):
     self.vertices = v
@@ -58,35 +85,30 @@ for v in range(len(vertices)):
       if [vFaces[v1],vFaces[v2]] in edges:#asumo las aristas se dan con los vertices ordenados de menor a mayor
         eFaces.append([vFaces[v1],vFaces[v2]])
   allSv.append(Sv(vFaces,eFaces,connectedTo))
-#########################################################
-  
   
 #########################################################
-#Cálculo de fuerzas
+# Forces calculation for each vertex
+forces = []
+for i in range(len(vertices)):
+  v = vertices[i]
+  sv = allSv[i]
+  fa = [0,0]
+  fr = [0,0]
+  fe = [0,0]
+  # Atracción entre nodos conectados
+  for vIdx in sv.connectedTo:
+    vc = vertices[vIdx]
+    f = fattract(v,vc)
+    fa[0]+=f[0]
+    fa[1]+=f[1]
+  # Repulsion entre nodos
+    
+  # Repulsión entre nodos y aristas
   
-delta = 1
-gamma = 1
-
-def dist(v1,v2):
-  return math.sqrt((v1[0]-v2[0])**2+(v1[1]-v2[1])**2)
-# Fuerza de repulsion entre vertices
-def fRep(v1,v2,delta=1):
-  d = dist(v1,v2)
-  fx = ((delta/d)**2)*(v1[0]-v2[0])
-  fy = ((delta/d)**2)*(v1[1]-v2[1])
-  return [fx,fy]
-# Fuerza de atracción entre vertices conectados
-def fattract(v1,v2,delta=1):
-  d = dist(v1,v2)
-  fx = (d/delta)*(v2[0]-v1[0])
-  fy = (d/delta)*(v2[1]-v1[1])
-  return [fx,fy]
-# Fuerza de repulsión entre vertice y arista. Ve es la proyección de v sobre e
-def fvEdge(v,ve,gamma=1):
-  d = dist(v,ve)
-  fx=0
-  fy=0
-  if(d<gamma):
-   fx = (((gamma-d)**2)/d)*(v[0]-ve[0])
-   fy = (((gamma-d)**2)/d)*(v[1]-ve[1])
-  return [fx,fy]
+  # Cálculo de la resultante de todas fuerzas
+  fTotal = [0,0]
+  fTotal[0] = fa[0]+fr[0]+fe[0]
+  fTotal[1] = fa[1]+fr[1]+fe[1]
+  forces.append(fTotal)
+#########################################################
+# Cálculo de Mv
