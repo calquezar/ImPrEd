@@ -87,7 +87,7 @@ for v in range(len(vertices)):
   allSv.append(Sv(vFaces,eFaces,connectedTo))
   
 #########################################################
-# Forces calculation for each vertex
+# 1) Forces calculation for each vertex
 forces = []
 for i in range(len(vertices)):
   v = vertices[i]
@@ -111,4 +111,8 @@ for i in range(len(vertices)):
   fTotal[1] = fa[1]+fr[1]+fe[1]
   forces.append(fTotal)
 #########################################################
-# Cálculo de Mv
+# 2) Cálculo de Mv
+  
+  
+  #########################################################
+# 3) Desplazamiento de los vértices en base al min(F,Mv)
