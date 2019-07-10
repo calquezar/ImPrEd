@@ -8,7 +8,7 @@ Created on Wed Jul 10 22:42:06 2019
 import numpy as np
 from scipy.spatial import Voronoi, voronoi_plot_2d
 import matplotlib.pyplot as plt
-
+import math
 #########################################################
 # Necesidad de añadir cuatro puntos para cerrar el diagrama de voronoi
 points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2],\
@@ -62,3 +62,32 @@ for v in range(len(vertices)):
 #########################################################
   
   
+#########################################################
+#Cálculo de fuerzas
+  
+delta = 1
+gamma = 1
+
+def dist(v1,v2):
+  return math.sqrt((v1[0]-v2[0])**2+(v1[1]-v2[1])**2)
+# Fuerza de repulsion entre vertices
+def fRep(v1,v2,delta=1):
+  d = dist(v1,v2)
+  fx = ((delta/d)**2)*(v1[0]-v2[0])
+  fy = ((delta/d)**2)*(v1[1]-v2[1])
+  return [fx,fy]
+# Fuerza de atracción entre vertices conectados
+def fattract(v1,v2,delta=1):
+  d = dist(v1,v2)
+  fx = (d/delta)*(v2[0]-v1[0])
+  fy = (d/delta)*(v2[1]-v1[1])
+  return [fx,fy]
+# Fuerza de repulsión entre vertice y arista. Ve es la proyección de v sobre e
+def fvEdge(v,ve,gamma=1):
+  d = dist(v,ve)
+  fx=0
+  fy=0
+  if(d<gamma):
+   fx = (((gamma-d)**2)/d)*(v[0]-ve[0])
+   fy = (((gamma-d)**2)/d)*(v[1]-ve[1])
+  return [fx,fy]
