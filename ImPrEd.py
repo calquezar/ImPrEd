@@ -42,9 +42,8 @@ for v in range(len(vertices)):
       vFaces += r
 #  vFaces = list(filter(lambda x: x != v, vFaces))
   vFaces = list(set(vFaces)) # remove redundancies
-  vFaces.remove(v)
-  vFaces.sort()
-  print(vFaces)
+  vFaces.remove(v) # remove myself from the list
+  vFaces.sort() # sort ascending
   # Connections
   connectedTo = []
   for v2 in vFaces:
