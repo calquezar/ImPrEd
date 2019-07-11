@@ -9,6 +9,7 @@ import numpy as np
 from scipy.spatial import Voronoi, voronoi_plot_2d
 import matplotlib.pyplot as plt
 import math
+from  QuadTree import QPoint, QuadTree
 #########################################################
 # Sv class
 class Sv:
@@ -143,6 +144,8 @@ vertices,edges,regions = preprocessVoronoiStruct(vor)
 allSv = preprocessing(vertices,edges,regions)
 maxIter = 1
 for it in range(maxIter):
+  qTree = QuadTree(QPoint.arrayToList(vertices))
+#  qTree.plot()
   #Step 1
   forces = forcesCalculation(vertices,allSv)
   #Step 2
