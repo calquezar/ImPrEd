@@ -80,7 +80,7 @@ def preprocessing(vertices,edges,regions):
   
 #########################################################
 # 1) Forces calculation for each vertex
-def forcesCalculation(vertices,allSv):
+def forcesCalculation(vertices,allSv):#TODO
   forces = []
   for i in range(len(vertices)):
     v = vertices[i]
@@ -105,13 +105,26 @@ def forcesCalculation(vertices,allSv):
     forces.append(fTotal)
   return forces
 #########################################################
+def pointEdgeProjection(v,e): #TODO
+  ve = []
+  return ve
 # 2) Cálculo de Mv
-def calculateMvs(vertices,allSv):
-  return []
+def calculateMvs(vertices,allSv):#TODO
+  Mvs = []
+  for i in range(len(vertices)):
+    v = vertices[i]
+    sv = allSv[i]
+    for e in sv.edges:
+      w1 = e[0]
+      w2 = e[1]
+      w = [vertices[w1],vertices[w2]]
+      ve = pointEdgeProjection(v,w)
+    
+  return Mvs
   
 #########################################################
 # 3) Desplazamiento de los vértices en base al min(F,Mv)
-def moveNodes(vertices,forces,Mvs):
+def moveNodes(vertices,forces,Mvs):#TODO
   return
   
 #########################################################
@@ -122,7 +135,7 @@ points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
 vor = Voronoi(points)
 #voronoi_plot_2d(vor)
 #plt.show()
-#########################################################
+######################################################### #TODO
 # Main algorithm
 delta = 1
 gamma = 1
