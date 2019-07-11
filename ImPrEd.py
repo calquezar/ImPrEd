@@ -80,8 +80,12 @@ def preprocessing(vertices,edges,regions):
   return allSv
   
 #########################################################
+def pointEdgeProjection(v,e): #TODO
+  ve = [0,0]
+  return ve
+#########################################################
 # 1) Forces calculation for each vertex
-def forcesCalculation(vertices,allSv):#TODO
+def forcesCalculation(vertices,qTree,allSv,delta,gamma):
   forces = []
   for i in range(len(vertices)):
     v = vertices[i]
@@ -96,9 +100,17 @@ def forcesCalculation(vertices,allSv):#TODO
       fa[0]+=f[0]
       fa[1]+=f[1]
     # Repulsion entre nodos
-      
+    neighbours = qTree.findPoints(QPoint(v[0],v[1]),delta)
+    for n in neighbours:
+      f = fRep(v,n.toArray())
+      fr[0]+=f[0]
+      fr[1]+=f[1]
     # Repulsión entre nodos y aristas
-    
+    for edge in sv.edges:
+      ve = pointEdgeProjection(v,edge)
+      f = fvEdge(v,ve,gamma)
+      fe[0]+=f[0]
+      fe[1]+=f[1]
     # Cálculo de la resultante de todas fuerzas
     fTotal = [0,0]
     fTotal[0] = fa[0]+fr[0]+fe[0]
@@ -106,9 +118,6 @@ def forcesCalculation(vertices,allSv):#TODO
     forces.append(fTotal)
   return forces
 #########################################################
-def pointEdgeProjection(v,e): #TODO
-  ve = []
-  return ve
 # 2) Cálculo de Mv
 def calculateMvs(vertices,allSv):#TODO
   Mvs = []
@@ -147,7 +156,7 @@ for it in range(maxIter):
   qTree = QuadTree(QPoint.arrayToList(vertices))
 #  qTree.plot()
   #Step 1
-  forces = forcesCalculation(vertices,allSv)
+  forces = forcesCalculation(vertices,qTree,allSv,delta,gamma)
   #Step 2
   Mvs = calculateMvs
   #Step 3
