@@ -7,6 +7,7 @@ Created on Wed Jul 10 22:42:06 2019
 """
 import numpy as np
 from scipy.spatial import Voronoi, voronoi_plot_2d
+from shapely.geometry import LineString, Point
 import matplotlib.pyplot as plt
 import math
 from  QuadTree import QPoint, QuadTree
@@ -80,8 +81,14 @@ def preprocessing(vertices,edges,regions):
   return allSv
   
 #########################################################
-def pointEdgeProjection(v,e): #TODO
-  ve = [0,0]
+def pointEdgeProjection(v,e): #TODO REVISAR
+  line = LineString([e[0],e[1]])
+  p = Point(v[0],v[1])
+  nearestPoint = list(line.interpolate(line.project(p)).coords[0]) #using shapely to find the nearest point to line
+  if (dist(nearestPoint,e[0])<dist(e[0],e[1])): #check if the point is between the segment or not
+    ve = nearestPoint
+  else: # get the nearest end
+    ve = e[0] if (dist(nearestPoint,e[0]) < dist(nearestPoint,e[1])) else e[1]
   return ve
 #########################################################
 # 1) Forces calculation for each vertex
@@ -107,7 +114,8 @@ def forcesCalculation(vertices,qTree,allSv,delta,gamma):
       fr[1]+=f[1]
     # Repulsión entre nodos y aristas
     for edge in sv.edges:
-      ve = pointEdgeProjection(v,edge)
+      edgeCoords = [vertices[edge[0]], vertices[edge[1]]] 
+      ve = pointEdgeProjection(v,edgeCoords)
       f = fvEdge(v,ve,gamma)
       fe[0]+=f[0]
       fe[1]+=f[1]
@@ -119,23 +127,37 @@ def forcesCalculation(vertices,qTree,allSv,delta,gamma):
   return forces
 #########################################################
 # 2) Cálculo de Mv
-def calculateMvs(vertices,allSv):#TODO
-  Mvs = []
-  for i in range(len(vertices)):
-    v = vertices[i]
-    sv = allSv[i]
-    for e in sv.edges:
+
+def calculateMaxDisplacement(vertex,edges):
+  
+#    lTan = math.tan(area[0])
+#    rTan = math.tan(area[1])
+    distances = []
+    for e in edges:
       w1 = e[0]
       w2 = e[1]
       w = [vertices[w1],vertices[w2]]
-      ve = pointEdgeProjection(v,w)
-    
+      ve = pointEdgeProjection(vertex,w)
+      distances.append(dist(vertex,ve))
+    return min(distances)/2
+      
+def calculateMvs(vertices,allSv):
+  Mvs = []
+  angles = np.linspace(0.0, 2*np.pi, num=8) # we divide the 360º in 8 portions
+  for i in range(len(vertices)):
+    v = vertices[i]
+    sv = allSv[i]
+    Mvs.append(calculateMaxDisplacement(v,sv.edges))#    for j in range(len(angles)):
+#      area = [angles[j],angles[(j+1)%len(angles)]] # we use this to make it circular and check all portions
   return Mvs
   
 #########################################################
 # 3) Desplazamiento de los vértices en base al min(F,Mv)
-def moveNodes(vertices,forces,Mvs):#TODO
-  return
+def moveNodes(vertices,forces,Mvs):
+  for i in range(len(vertices)):
+    vertices[i][0]+=min(forces[i][0],Mvs[i])
+    vertices[i][1]+=min(forces[i][1],Mvs[i])
+  return vertices
   
 #########################################################
 # Datos de prueba
@@ -143,25 +165,27 @@ def moveNodes(vertices,forces,Mvs):#TODO
 points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
                    [2, 1], [2, 2], [-5,5],[5,5],[5,-5],[-5,-5]])
 vor = Voronoi(points)
-#voronoi_plot_2d(vor)
-#plt.show()
+voronoi_plot_2d(vor)
+plt.show()
 ######################################################### #TODO
 # Main algorithm
 delta = 1
 gamma = 1
 vertices,edges,regions = preprocessVoronoiStruct(vor)
 allSv = preprocessing(vertices,edges,regions)
-maxIter = 1
+maxIter = 2
 for it in range(maxIter):
   qTree = QuadTree(QPoint.arrayToList(vertices))
 #  qTree.plot()
   #Step 1
   forces = forcesCalculation(vertices,qTree,allSv,delta,gamma)
   #Step 2
-  Mvs = calculateMvs
+  Mvs = calculateMvs(vertices,allSv)
   #Step 3
   moveNodes(vertices,forces,Mvs)
 #Draw results
-#vor.vertices = vertices
-#voronoi_plot_2d(vor)
-#plt.show()
+vor.vertices = vertices
+voronoi_plot_2d(vor)
+plt.show()
+  
+
