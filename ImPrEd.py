@@ -95,6 +95,7 @@ def pointEdgeProjection(v,e): #TODO REVISAR
 def forcesCalculation(vertices,qTree,allSv,delta,gamma):
   forces = []
   for i in range(len(vertices)):
+#  for i in range(1):
     v = vertices[i]
     sv = allSv[i]
     fa = [0,0]
@@ -105,7 +106,7 @@ def forcesCalculation(vertices,qTree,allSv,delta,gamma):
       vc = vertices[vIdx]
       f = fattract(v,vc)
       fa[0]+=f[0]
-      fa[1]+=f[1]
+#      fa[1]+=f[1]
     # Repulsion entre nodos
     neighbours = qTree.findPoints(QPoint(v[0],v[1]),delta)
     for n in neighbours:
@@ -155,37 +156,70 @@ def calculateMvs(vertices,allSv):
 # 3) Desplazamiento de los vértices en base al min(F,Mv)
 def moveNodes(vertices,forces,Mvs):
   for i in range(len(vertices)):
-    vertices[i][0]+=min(forces[i][0],Mvs[i])
-    vertices[i][1]+=min(forces[i][1],Mvs[i])
+    vertices[i][0]+=min(abs(forces[i][0]),abs(Mvs[i]))
+    vertices[i][1]+=min(abs(forces[i][1]),abs(Mvs[i]))
   return vertices
   
+def plotGraph(vertices,edges):
+  plt.clf()
+  for e in edges:
+    v0 = vertices[e[0]]
+    v1 = vertices[e[1]]
+    x = [v0[0],v1[0]]
+    y = [v0[1],v1[1]]
+    plt.plot(x,y,color='k')
+  axes = plt.gca()
+  vmin = np.amin(vertices)
+  vmax = np.amax(vertices)
+  axes.set_xlim([vmin,vmax])
+  axes.set_ylim([vmin,vmax])
+  plt.pause(0.1)
 #########################################################
 # Datos de prueba
 # Necesidad de añadir cuatro puntos para cerrar el diagrama de voronoi
 points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
                    [2, 1], [2, 2], [-5,5],[5,5],[5,-5],[-5,-5]])
 vor = Voronoi(points)
-voronoi_plot_2d(vor)
-plt.show()
+#voronoi_plot_2d(vor)
+#plt.show()
+#########################################################
+#points = np.array([[1,1], [3, 1], [2, 2], [2,0],[1.7,1],[2.3,1 ],[2,1.7]])
+#vor = Voronoi(points)
+#vor.vertices[0][0]=1.7
+#vor.vertices[0][1]=1.3
+#voronoi_plot_2d(vor)
+#plt.show()
 ######################################################### #TODO
 # Main algorithm
-delta = 1
+delta = 0.5
 gamma = 1
 vertices,edges,regions = preprocessVoronoiStruct(vor)
 allSv = preprocessing(vertices,edges,regions)
-maxIter = 2
+maxIter = 20
+figManager = plt.get_current_fig_manager()
+figManager.window.showMaximized()
 for it in range(maxIter):
   qTree = QuadTree(QPoint.arrayToList(vertices))
 #  qTree.plot()
   #Step 1
   forces = forcesCalculation(vertices,qTree,allSv,delta,gamma)
-  #Step 2
+#  #Step 2
   Mvs = calculateMvs(vertices,allSv)
-  #Step 3
+#  #Step 3
   moveNodes(vertices,forces,Mvs)
-#Draw results
-vor.vertices = vertices
-voronoi_plot_2d(vor)
+  #refresh plot
+  plotGraph(vertices,edges)
+
 plt.show()
   
+  
+#  plt.scatter(vertices[:,0], vertices[:,1],s=10)
+#  plt.pause(0.1)
+
+
+#Draw results
+#vor.vertices = vertices
+#voronoi_plot_2d(vor)
+#plt.show()
+#  
 
