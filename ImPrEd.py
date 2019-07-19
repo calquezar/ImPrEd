@@ -11,6 +11,7 @@ from shapely.geometry import LineString, Point, Polygon
 import matplotlib.pyplot as plt
 import math
 from  QuadTree import QPoint, QuadTree
+from statistics import median
 #########################################################
 # Sv class
 class Sv:
@@ -262,6 +263,8 @@ def area(region):
 #########################################################
 points = np.array([[-10,0],[10,0],[0,-10],[0,10],[-0.2,-0.5],[0, 0], [0.0001, 0.0001], [0, 0.0001],[0.0001, 0],[0.00005, 0.00005],[0, 0.0002],[0.0001, 0.0002]])
 vor = Voronoi(points)
+#vor.vertices[2][0]=-10000000
+#vor.vertices [2][1]=-10000000
 #########################################################
 #points = np.array([[1,1], [3, 1], [2, 2], [2,0],[1.7,1],[2.3,1 ],[2,1.7]])
 #vor = Voronoi(points)
@@ -279,7 +282,7 @@ delta = 1
 gamma = 1
 vertices,edges,regions = preprocessVoronoiStruct(vor)
 allSv = preprocessing(vertices,edges,regions)
-maxIter = 50
+maxIter = 100
 figManager = plt.get_current_fig_manager()
 figManager.window.showMaximized()
 plotGraph(vertices,edges)
@@ -287,9 +290,16 @@ for it in range(maxIter):
   print(it)
   qTree = QuadTree(QPoint.arrayToList(vertices))
 #  qTree.plot()
-  #sort regions by area
-  regions.sort(key=area,reverse=False) # descending ordering
-  region = regions[0]
+  #####################################################
+  # region selection in function of relative area respect to the median
+  # of the graph
+  regions.sort(key=area) # sort regions by area in ascending order
+  areas = [area(r) for r in regions]
+  mAreas = median(areas)
+  minArea = areas[0]
+  maxArea = areas[-1]
+  region = regions[0] if abs(math.log(mAreas/minArea))>abs(math.log(mAreas/maxArea)) else regions[-1]
+  #####################################################
   #Step 1
   forces = forcesCalculation(vertices,region,qTree,allSv,delta,gamma)
 #  #Step 2
