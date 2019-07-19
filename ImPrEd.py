@@ -200,9 +200,10 @@ def calculateMvs(vertices,region,allSv):
   
 #########################################################
 # 3) Desplazamiento de los vértices en base al min(F,Mv)
-def moveNodes(vertices,region,forces,Mvs):
+def moveNodes(vertices,region,forces,Mvs,verticesBoundary):
 #  for i in range(len(vertices)):
   for i in range(len(region)):
+    v = region[i]
     angleF = (math.atan2(forces[i][1],forces[i][0])+2*math.pi)%(2*math.pi) #angle between [0,2*pi]
     sector = int(angleF//(math.pi/4))%8
 #    print(forces[i],angleF*180/math.pi,sector)
@@ -214,8 +215,8 @@ def moveNodes(vertices,region,forces,Mvs):
     shiftX = maxShift*math.cos(angleF)
     shiftY = maxShift*math.sin(angleF)
 #    print(shiftX,shiftY)
-    vertices[region[i]][0]+=shiftX
-    vertices[region[i]][1]+=shiftY
+    vertices[v][0]+=shiftX
+    vertices[v][1]+=shiftY
     plotGraph(vertices,edges)
 
   return vertices
@@ -242,27 +243,50 @@ def area(region):
   pol = Polygon(points)
   return pol.area
   
+#########################################################
+  
+def isInRegion(edge,region):
+  isIn = True
+  for v in edge:
+    if v not in region:
+      isIn=False
+      break
+  return isIn
+
+def getBoundary(edges,regions):
+  
+  boundary = []
+  for e in edges:
+    count = 0
+    for r in regions:
+      if isInRegion(e,r):
+        count+=1
+      if count>1:
+        break
+    if count<2:
+      boundary.append(e)
+  return boundary
   
 #########################################################
 # Datos de prueba
 # Necesidad de añadir cuatro puntos para cerrar el diagrama de voronoi
-#points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
-#                   [2, 1], [2, 2], [-5,5],[5,5],[5,-5],[-5,-5]])
-#vor = Voronoi(points)
-#vor.vertices[13][0]=0.0000000005
-#vor.vertices[13][1]=0.0000000005
-#vor.vertices[14][0]=0.0000000015
-#vor.vertices[14][1]=0.0000000005
-#vor.vertices[15][0]=0.0000000015
-#vor.vertices[15][1]=0.0000000015
-#vor.vertices[12][0]=0.0000000005
-#vor.vertices[12][1]=0.0000000015
+points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
+                   [2, 1], [2, 2], [-5,5],[5,5],[5,-5],[-5,-5]])
+vor = Voronoi(points)
+vor.vertices[13][0]=0.0000000005
+vor.vertices[13][1]=0.0000000005
+vor.vertices[14][0]=0.0000000015
+vor.vertices[14][1]=0.0000000005
+vor.vertices[15][0]=0.0000000015
+vor.vertices[15][1]=0.0000000015
+vor.vertices[12][0]=0.0000000005
+vor.vertices[12][1]=0.0000000015
 
 #voronoi_plot_2d(vor)
 #plt.show()
 #########################################################
-points = np.array([[-10,0],[10,0],[0,-10],[0,10],[-0.2,-0.5],[0, 0], [0.0001, 0.0001], [0, 0.0001],[0.0001, 0],[0.00005, 0.00005],[0, 0.0002],[0.0001, 0.0002]])
-vor = Voronoi(points)
+#points = np.array([[-10,0],[10,0],[0,-10],[0,10],[-0.2,-0.5],[0, 0], [0.0001, 0.0001], [0, 0.0001],[0.0001, 0],[0.00005, 0.00005],[0, 0.0002],[0.0001, 0.0002]])
+#vor = Voronoi(points)
 #vor.vertices[2][0]=-10000000
 #vor.vertices [2][1]=-10000000
 #########################################################
@@ -281,11 +305,19 @@ vor = Voronoi(points)
 delta = 1
 gamma = 1
 vertices,edges,regions = preprocessVoronoiStruct(vor)
+boundary = getBoundary(edges,regions)
+
+verticesBoundary = []
+for e in boundary:
+  verticesBoundary+=e
+verticesBoundary = set(verticesBoundary)
+    
 allSv = preprocessing(vertices,edges,regions)
-maxIter = 100
+maxIter = 50
 figManager = plt.get_current_fig_manager()
 figManager.window.showMaximized()
-plotGraph(vertices,edges)
+#plotGraph(vertices,edges)
+
 for it in range(maxIter):
   print(it)
   qTree = QuadTree(QPoint.arrayToList(vertices))
@@ -305,7 +337,7 @@ for it in range(maxIter):
 #  #Step 2
   Mvs = calculateMvs(vertices,region,allSv)
 #  #Step 3
-  moveNodes(vertices,region,forces,Mvs)
+  moveNodes(vertices,region,forces,Mvs,verticesBoundary)
   #refresh plot
 #plotGraph(vertices,edges)
 plt.show()
