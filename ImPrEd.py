@@ -85,7 +85,7 @@ def pointEdgeProjection(v,e): #TODO REVISAR
   line = LineString([e[0],e[1]])
   p = Point(v[0],v[1])
   nearestPoint = list(line.interpolate(line.project(p)).coords[0]) #using shapely to find the nearest point to line
-  if (dist(nearestPoint,e[0])<dist(e[0],e[1])): #check if the point is between the segment or not
+  if (dist(nearestPoint,e[0])<dist(e[0],e[1])): #check if the point is inside the segment or not
     ve = nearestPoint
   else: # get the nearest end
     ve = e[0] if (dist(nearestPoint,e[0]) < dist(nearestPoint,e[1])) else e[1]
@@ -128,36 +128,61 @@ def forcesCalculation(vertices,qTree,allSv,delta,gamma):
   return forces
 #########################################################
 # 2) Cálculo de Mv
+def calculateMaxDisplacements(v,e):
+  w1 = e[0]
+  w2 = e[1]
+  w = [vertices[w1],vertices[w2]]
+  ve = pointEdgeProjection(v,w)
+  cv = dist(v,ve)
+  angleCv = math.atan2(ve[0]-v[0],ve[1]-v[1])+math.pi #angle between [0,2*pi]
+  sectorCv = angleCv//(math.pi/4)
+  distances = []
+  for j in range(8):
+    diff = (sectorCv-j)%8
+    if diff==0: #same sector
+      sigma=1
+    elif (diff==1 or diff==2):
+      sigma= 1/math.cos(angleCv-(j+1)*math.pi/4)
+    elif (diff==6 or diff==7):
+      sigma= 1/math.cos(angleCv-j*math.pi/4)
+    else:
+      sigma=2 # own decision
+    distances.append(cv*sigma)
+  return distances
 
-def calculateMaxDisplacement(vertex,edges):
-  
-#    lTan = math.tan(area[0])
-#    rTan = math.tan(area[1])
-    distances = []
-    for e in edges:
-      w1 = e[0]
-      w2 = e[1]
-      w = [vertices[w1],vertices[w2]]
-      ve = pointEdgeProjection(vertex,w)
-      distances.append(dist(vertex,ve))
-    return min(distances)/2
-      
+def updateMvs(mv,mvNew):
+  if (mv==[]):
+    return mvNew
+  else:
+    for i in range(len(mv)):
+      mv[i]=min(mv[i],mvNew[i])
+    return mv
+
 def calculateMvs(vertices,allSv):
   Mvs = []
-  angles = np.linspace(0.0, 2*np.pi, num=8) # we divide the 360º in 8 portions
   for i in range(len(vertices)):
     v = vertices[i]
     sv = allSv[i]
-    Mvs.append(calculateMaxDisplacement(v,sv.edges))#    for j in range(len(angles)):
-#      area = [angles[j],angles[(j+1)%len(angles)]] # we use this to make it circular and check all portions
+    mv = []
+    for e in sv.edges:
+      maxDisp = calculateMaxDisplacements(v,e)
+      mv = updateMvs(mv,maxDisp)
+    Mvs.append(mv)
   return Mvs
   
 #########################################################
 # 3) Desplazamiento de los vértices en base al min(F,Mv)
 def moveNodes(vertices,forces,Mvs):
   for i in range(len(vertices)):
-    vertices[i][0]+=min(abs(forces[i][0]),abs(Mvs[i]))
-    vertices[i][1]+=min(abs(forces[i][1]),abs(Mvs[i]))
+    angleF = math.atan2(forces[i][1],forces[i][0])+math.pi #angle between [0,2*pi]
+    sector = int(angleF//(math.pi/4))%8
+    forceAmplitude = math.sqrt(forces[i][0]**2+forces[i][1]**2)
+    mv = Mvs[i][sector]
+    maxDisp = min(forceAmplitude,mv)
+    dispX = maxDisp*math.cos(angleF)
+    dispY = maxDisp*math.sin(angleF)
+    vertices[i][0]+=dispX
+    vertices[i][1]+=dispY
   return vertices
   
 def plotGraph(vertices,edges):
@@ -173,20 +198,20 @@ def plotGraph(vertices,edges):
   vmax = np.amax(vertices)
   axes.set_xlim([vmin,vmax])
   axes.set_ylim([vmin,vmax])
-  plt.pause(0.1)
+  plt.pause(1)
 #########################################################
 # Datos de prueba
 # Necesidad de añadir cuatro puntos para cerrar el diagrama de voronoi
-points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
-                   [2, 1], [2, 2], [-5,5],[5,5],[5,-5],[-5,-5]])
-vor = Voronoi(points)
+#points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
+#                   [2, 1], [2, 2], [-5,5],[5,5],[5,-5],[-5,-5]])
+#vor = Voronoi(points)
 #voronoi_plot_2d(vor)
 #plt.show()
 #########################################################
-#points = np.array([[1,1], [3, 1], [2, 2], [2,0],[1.7,1],[2.3,1 ],[2,1.7]])
-#vor = Voronoi(points)
-#vor.vertices[0][0]=1.7
-#vor.vertices[0][1]=1.3
+points = np.array([[1,1], [3, 1], [2, 2], [2,0],[1.7,1],[2.3,1 ],[2,1.7]])
+vor = Voronoi(points)
+vor.vertices[0][0]=1.7
+vor.vertices[0][1]=1.3
 #voronoi_plot_2d(vor)
 #plt.show()
 ######################################################### #TODO
@@ -195,7 +220,7 @@ delta = 0.5
 gamma = 1
 vertices,edges,regions = preprocessVoronoiStruct(vor)
 allSv = preprocessing(vertices,edges,regions)
-maxIter = 20
+maxIter = 4
 figManager = plt.get_current_fig_manager()
 figManager.window.showMaximized()
 for it in range(maxIter):
