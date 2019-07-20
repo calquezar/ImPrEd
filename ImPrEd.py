@@ -313,7 +313,7 @@ for e in boundary:
 verticesBoundary = set(verticesBoundary)
     
 allSv = preprocessing(vertices,edges,regions)
-maxIter = 50
+maxIter = 20
 figManager = plt.get_current_fig_manager()
 figManager.window.showMaximized()
 #plotGraph(vertices,edges)
