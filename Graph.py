@@ -22,8 +22,10 @@ AUTHORS:
 # ****************************************************************************
 
 import numpy as np
+import math
 from matplotlib import pyplot as plt
-from shapely.geometry import Polygon
+from shapely.geometry import LineString, Point, Polygon
+import statistics
 
 class SurroundingInfo:
     def __init__(self, v, e, c):
@@ -42,6 +44,7 @@ class Graph:
         self.edges = [ x for x in vor.ridge_vertices if -1 not in x ]
         self.regions = [ x for x in vor.regions if -1 not in x ][1:] # hay que asegurarse que el primer elementos es [] siempre
         self.plot = False
+        # self.project_to_envelope()
 
     def area(self, region):
         r"""
@@ -51,16 +54,40 @@ class Graph:
         pol = Polygon(points)
         return pol.area
 
-    def is_in_region(edge, region):
+    def abslog_area(self, region):
+        r"""
+            Return the abs(log(area)) of the given region
+        """
+        return abs(math.log(self.area(region)))
+
+    def count_edge_crossings(self):
         r"""
             Return true if the edge is in the boundary of the region
         """
-        isIn = True
-        for v in edge:
-            if v not in region:
-                isIn = False
-                break
-        return isIn
+        crossings = 0
+        for e1 in range(len(self.edges)-1):
+            for e2 in range(e1+1, len(self.edges)):
+                edge1 = LineString([self.vertices[self.edges[e1][0]], self.vertices[self.edges[e1][1]]])
+                edge2 = LineString([self.vertices[self.edges[e2][0]], self.vertices[self.edges[e2][1]]])
+                if edge1.crosses(edge2):
+                    crossings += 1
+        return crossings
+
+    def get_std_area(self):
+        r"""
+            Return
+        """
+        # self.regions.sort(key=self.abslog_area)  # sort regions by area in ascending order
+
+        self.regions.sort(key=self.area)  # sort regions by area in ascending order
+        areas = [self.area(r) for r in self.regions]
+        self.mean_area = statistics.mean(areas)
+        self.std_area = statistics.stdev(areas)
+        smallest = abs(areas[0]-self.mean_area)/self.std_area
+        biggest = abs(areas[-1]-self.mean_area)/self.std_area
+        region = self.regions[0] if smallest > biggest else self.regions[-1]
+        self.normalized_std_area = max(smallest, biggest)
+        return self.std_area, self.normalized_std_area, region
 
     def get_boundary_edges(self):
         r"""
@@ -87,6 +114,36 @@ class Graph:
             vertices += e
         return list(set(vertices))
 
+    def get_envelope(self):
+        r"""
+            Return the smallest square that contains the graph
+        """
+        vmin = np.amin(self.vertices)
+        vmax = np.amax(self.vertices)
+        # corners
+        bottom_left = [vmin, vmin]
+        bottom_right = [vmin, vmax]
+        top_left = [vmin, vmax]
+        top_right = [vmax, vmax]
+        # list of corners
+        points = []
+        points.append(bottom_left)
+        points.append(bottom_right)
+        points.append(top_right)
+        points.append(top_left)
+        return points
+
+    def is_in_region(edge, region):
+        r"""
+            Return true if the edge is in the boundary of the region
+        """
+        isIn = True
+        for v in edge:
+            if v not in region:
+                isIn = False
+                break
+        return isIn
+
     def plot_graph(self):
         r"""
             Plot graph
@@ -104,3 +161,37 @@ class Graph:
         axes.set_xlim([vmin - 0.1, vmax + 0.1])
         axes.set_ylim([vmin - 0.1, vmax + 0.1])
         plt.pause(0.1)
+
+    def _point_edge_projection(v, e):
+        r"""
+            Return the projection of vertex 'v' into edge 'e'
+        """
+        line = LineString([e[0], e[1]])
+        p = Point(v)
+        nearest_point = line.interpolate(line.project(p))  # using shapely to find the nearest point to line
+        distance_to_end0 = nearest_point.distance(Point(e[0]))
+        distance_to_end1 = nearest_point.distance(Point(e[1]))
+        edge_length = Point(e[0]).distance(Point(e[1]))
+        if distance_to_end0 < edge_length:  # check if the point is inside the segment or not
+            ve = list(nearest_point.coords[0])
+        else:  # get the nearest end
+            ve = e[0] if (distance_to_end0 < distance_to_end1) else e[1]
+        dist = Point(ve).distance(Point(v))
+        return ve, dist
+
+    # def project_to_envelope(self):
+    #     r"""
+    #         Return the smallest square that contains the graph
+    #     """
+    #     envelope = self.get_envelope()
+    #     boundary_vertices = self.get_boundary_vertices()
+    #     for v in boundary_vertices:
+    #         coords = self.vertices[v]
+    #         min_distance = -1
+    #         for i in range(4):
+    #             edge_coords = [envelope[i], envelope[(i+1)%4]]
+    #             projection, distance = Graph._point_edge_projection(coords, edge_coords)
+    #             if min_distance < 0 or min_distance > distance:
+    #                 min_distance = distance
+    #                 new_coords = projection
+    #         self.vertices[v] = new_coords

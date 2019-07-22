@@ -155,7 +155,7 @@ class ForceDirectedLayout:
             # repulsion with surrounding edges
             for edge in sv.edges:
                 edge_coords = [vertices[edge[0]], vertices[edge[1]]]
-                ve = ForceDirectedLayout._point_edge_projection(v, edge_coords)
+                ve, distance = Graph._point_edge_projection(v, edge_coords)
                 f = ForceDirectedLayout._node_edge_repulsion(v, ve, gamma)
                 fe[0] += f[0]
                 fe[1] += f[1]
@@ -223,7 +223,7 @@ class ForceDirectedLayout:
 
         """
         edge_coords = [vertices[e[0]], vertices[e[1]]]  # coordinates of the edge endings
-        ve = ForceDirectedLayout._point_edge_projection(v, edge_coords)
+        ve, distance = Graph._point_edge_projection(v, edge_coords)
         vector_to_edge = ForceDirectedLayout._dist(v, ve)
         vector_direction = (math.atan2(ve[1] - v[1], ve[0] - v[0]) + 2 * math.pi) % (2 * math.pi)  # between [0,2*pi]
         corresponding_sector = int(vector_direction // (math.pi / 4))  # the circumference is divided into 8 sectors
@@ -257,6 +257,7 @@ class ForceDirectedLayout:
         """
         for i in range(len(region)):
             v = region[i]
+            # if v not in graph.get_boundary_vertices():
             force_direction = (math.atan2(forces[i][1], forces[i][0]) + 2 * math.pi) % (2 * math.pi)  # angle between [0,2*pi]
             sector = int(force_direction // (math.pi / 4)) % 8
             force_amplitude = math.sqrt(forces[i][0] ** 2 + forces[i][1] ** 2)
@@ -269,35 +270,37 @@ class ForceDirectedLayout:
             if graph.plot:
                 graph.plot_graph()
 
-    def _point_edge_projection(v, e):
-        r"""
-            Return the projection of vertex 'v' into edge 'e'
-        """
-        line = LineString([e[0], e[1]])
-        p = Point(v[0], v[1])
-        nearest_point = list(line.interpolate(line.project(p)).coords[0])  # using shapely to find the nearest point to line
-        distance_to_end0 = ForceDirectedLayout._dist(nearest_point, e[0])
-        distance_to_end1 = ForceDirectedLayout._dist(nearest_point, e[1])
-        edge_length = ForceDirectedLayout._dist(e[0], e[1])
-        if distance_to_end0 < edge_length:  # check if the point is inside the segment or not
-            ve = nearest_point
-        else:  # get the nearest end
-            ve = e[0] if (distance_to_end0 < distance_to_end1) else e[1]
-        return ve
+    # def _point_edge_projection(v, e):
+    #     r"""
+    #         Return the projection of vertex 'v' into edge 'e'
+    #     """
+    #     line = LineString([e[0], e[1]])
+    #     p = Point(v[0], v[1])
+    #     nearest_point = list(line.interpolate(line.project(p)).coords[0])  # using shapely to find the nearest point to line
+    #     distance_to_end0 = ForceDirectedLayout._dist(nearest_point, e[0])
+    #     distance_to_end1 = ForceDirectedLayout._dist(nearest_point, e[1])
+    #     edge_length = ForceDirectedLayout._dist(e[0], e[1])
+    #     if distance_to_end0 < edge_length:  # check if the point is inside the segment or not
+    #         ve = nearest_point
+    #     else:  # get the nearest end
+    #         ve = e[0] if (distance_to_end0 < distance_to_end1) else e[1]
+    #     return ve
 
-    def run(self):
+    def run(self, tol=1):
         r"""
             Return the lowest displacements for each direction
         """
 
         surroundings = ForceDirectedLayout._calculate_surroundings(self.graph)
         for it in range(self.maxIter):
-            print(it)
             qTree = QuadTree(QPoint.arrayToList(self.graph.vertices))
             #  qTree.plot()
             #####################################################
             # region selection in function of relative area
-            region = ForceDirectedLayout._select_region(self.graph)
+            region = ForceDirectedLayout._select_region(self.graph, tol)
+            if region == []:
+                print("Finished")
+                break;
             #####################################################
             # Step 1
             forces = ForceDirectedLayout._forces_calculation(self.graph.vertices, region, qTree, surroundings, \
@@ -307,15 +310,25 @@ class ForceDirectedLayout:
                                                                                   region, surroundings)
             #  #Step 3
             ForceDirectedLayout._move_nodes(self.graph, region, forces,  safe_displacements)
+            # crossings = self.graph.count_edge_crossings()
+            print("Iter: "+str(it)+"; Crossings: " + str(self.graph.count_edge_crossings()))
 
 
-    def _select_region(graph):
-        graph.regions.sort(key=graph.area)  # sort regions by area in ascending order
-        areas = [abs(math.log(graph.area(r))) for r in graph.regions]
-        lowest = areas[0]
-        highest = areas[-1]
-        region = graph.regions[0] if lowest > highest else graph.regions[-1]
+    def _select_region(graph, tol=1):
+        r"""
+            Return the lowest displacements for each direction
+        """
+        std, normalized_std, region = graph.get_std_area()
+        # print(normalized_std, std)
+        if normalized_std < tol:
+            region = []
         return region
+        # graph.regions.sort(key=graph.abslog_area)  # sort regions by area in ascending order
+        # areas = [abs(math.log(graph.area(r))) for r in graph.regions]
+        # lowest = areas[0]
+        # highest = areas[-1]
+        # region = graph.regions[0] if lowest > highest else graph.regions[-1]
+        # return region
 
     def _update_maximum_movements(old_limits, new_limits):
         r"""
