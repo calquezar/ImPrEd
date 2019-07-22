@@ -62,7 +62,7 @@ class Graph:
 
     def count_edge_crossings(self):
         r"""
-            Return true if the edge is in the boundary of the region
+            Return the number of crossings in the graph
         """
         crossings = 0
         for e1 in range(len(self.edges)-1):
