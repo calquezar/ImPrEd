@@ -71,6 +71,7 @@ class Graph:
                 edge2 = LineString([self.vertices[self.edges[e2][0]], self.vertices[self.edges[e2][1]]])
                 if edge1.crosses(edge2):
                     crossings += 1
+                    # print(self.edges[e1],self.edges[e2])
         return crossings
 
     def get_std_area(self):
@@ -133,7 +134,7 @@ class Graph:
         points.append(top_left)
         return points
 
-    def is_in_region(edge, region):
+    def is_in_region(self, edge, region):
         r"""
             Return true if the edge is in the boundary of the region
         """
@@ -162,7 +163,7 @@ class Graph:
         axes.set_ylim([vmin - 0.1, vmax + 0.1])
         plt.pause(0.1)
 
-    def _point_edge_projection(v, e):
+    def _point_edge_projection(self, v, e):
         r"""
             Return the projection of vertex 'v' into edge 'e'
         """

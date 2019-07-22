@@ -12,6 +12,30 @@ import math
 from shapely.geometry import Polygon
 
 
+def arrayToList(points):
+    return [QPoint(p[0], p[1]) for p in points]
+
+
+def listToArray(points):
+    return [[p.x, p.y] for p in points]
+
+
+def getMinX(points):
+    return min([p.x for p in points])
+
+
+def getMaxX(points):
+    return max([p.x for p in points])
+
+
+def getMinY(points):
+    return min([p.y for p in points])
+
+
+def getMaxY(points):
+    return max([p.y for p in points])
+
+
 ###########################################################################
 class QPoint:
 
@@ -27,24 +51,6 @@ class QPoint:
 
     def toArray(self):
         return [self.x, self.y]
-
-    def arrayToList(points):
-        return [QPoint(p[0], p[1]) for p in points]
-
-    def listToArray(points):
-        return [[p.x, p.y] for p in points]
-
-    def getMinX(points):
-        return min([p.x for p in points])
-
-    def getMaxX(points):
-        return max([p.x for p in points])
-
-    def getMinY(points):
-        return min([p.y for p in points])
-
-    def getMaxY(points):
-        return max([p.y for p in points])
 
 
 ###########################################################################
@@ -158,10 +164,10 @@ class QuadTree:
 
         if (len(points) > self.threshold):
             if (nodeID == "0"):  # root node
-                minx = QPoint.getMinX(points)
-                miny = QPoint.getMinY(points)
-                width = QPoint.getMaxX(points) - minx
-                height = QPoint.getMaxY(points) - miny
+                minx = getMinX(points)
+                miny = getMinY(points)
+                width = getMaxX(points) - minx
+                height = getMaxY(points) - miny
             else:
                 minx = x
                 miny = y

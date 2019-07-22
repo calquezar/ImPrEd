@@ -42,16 +42,13 @@ vor.vertices [2][1]=-10000000
 ######################################################### #TODO
 
 
-
-
-
 # Main algorithm
 delta = 1
 gamma = 1
 g = Graph(vor)
 g.plot = True
 maxIter = 100
-tol = 1.2
+tol = 0.2
 # figManager = plt.get_current_fig_manager()
 # figManager.window.showMaximized()
 f = ForceDirectedLayout(g, delta,gamma,maxIter)

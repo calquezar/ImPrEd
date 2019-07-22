@@ -29,9 +29,10 @@ AUTHORS:
 #                  https://www.gnu.org/licenses/
 # ****************************************************************************
 
-import Graph
+
 import numpy as np
 import math
+import QuadTree as QT
 from QuadTree import QPoint, QuadTree
 from shapely.geometry import LineString, Point, Polygon
 from Graph import Graph, SurroundingInfo
@@ -47,7 +48,7 @@ class ForceDirectedLayout:
         self.gamma = gamma
         self.maxIter = maxIter
 
-    def _calculate_maximum_movements(vertices, region, surroundings):
+    def _calculate_maximum_movements(self, vertices, region, surroundings):
         r"""
             Return the maximum displacements in each direction for each vertex of a given region
 
@@ -69,12 +70,12 @@ class ForceDirectedLayout:
             sv = surroundings[i]
             safe_area = []
             for e in sv.edges:
-                edge_hindering = ForceDirectedLayout._maximum_displacements(v, e, vertices)
-                safe_area = ForceDirectedLayout._update_maximum_movements(safe_area, edge_hindering)
+                edge_hindering = self._maximum_displacements(v, e, vertices)
+                safe_area = self._update_maximum_movements(safe_area, edge_hindering)
             safe_areas_for_all_vertices.append(safe_area)
         return safe_areas_for_all_vertices
 
-    def _calculate_surroundings(graph):
+    def _calculate_surroundings(self):
         r"""
             Return the surrounding information of each vertex in 'vertices'.
 
@@ -84,10 +85,10 @@ class ForceDirectedLayout:
 
         """
         surroundings = []
-        for v in range(len(graph.vertices)):
+        for v in range(len(self.graph.vertices)):
             # Faces
             faces = []
-            for r in graph.regions:
+            for r in self.graph.regions:
                 if v in r:
                     faces += r
             faces = list(set(faces))  # remove redundancies
@@ -97,25 +98,25 @@ class ForceDirectedLayout:
             connected_to = []
             for v2 in faces:
                 edge = [v, v2] if v < v2 else [v2, v]
-                if edge in graph.edges:
+                if edge in self.graph.edges:
                     connected_to += [v2]
             connected_to.sort()
             # Surrounding Edges
             boundary = []
             for v1 in range(len(faces) - 1):
                 for v2 in range(v1 + 1, len(faces)):
-                    if [faces[v1], faces[v2]] in graph.edges:  # asumo las aristas se dan con los vertices ordenados de menor a mayor
+                    if [faces[v1], faces[v2]] in self.graph.edges:  # asumo las aristas se dan con los vertices ordenados de menor a mayor
                         boundary.append([faces[v1], faces[v2]])
             surroundings.append(SurroundingInfo(faces, boundary, connected_to))
         return surroundings
 
-    def _dist(v1, v2):
+    def _dist(self, v1, v2):
         r"""
             Return the euclidean distance between vertices v1 and v2.
         """
         return math.sqrt((v1[0] - v2[0]) ** 2 + (v1[1] - v2[1]) ** 2)
 
-    def _forces_calculation(vertices, region, qTree, surroundings, delta, gamma):
+    def _forces_calculation(self, vertices, region, qTree, surroundings, delta, gamma):
         r"""
             Return the corresponding forces for each vertex
 
@@ -143,20 +144,20 @@ class ForceDirectedLayout:
             # Attraction between connected nodes
             for vIdx in sv.connected_to:
                 vc = vertices[vIdx]
-                f = ForceDirectedLayout._node_node_attraction(v, vc, delta)
+                f = self._node_node_attraction(v, vc, delta)
                 fa[0] += f[0]
                 fa[1] += f[1]
             # repulsion between neighbour nodes
             neighbours = qTree.findPoints(QPoint(v[0], v[1]), delta)
             for n in neighbours:
-                f = ForceDirectedLayout._node_node_repulsion(v, n.toArray(), delta)
+                f = self._node_node_repulsion(v, n.toArray(), delta)
                 fr[0] += f[0]
                 fr[1] += f[1]
             # repulsion with surrounding edges
             for edge in sv.edges:
                 edge_coords = [vertices[edge[0]], vertices[edge[1]]]
-                ve, distance = Graph._point_edge_projection(v, edge_coords)
-                f = ForceDirectedLayout._node_edge_repulsion(v, ve, gamma)
+                ve, distance = self.graph._point_edge_projection(v, edge_coords)
+                f = self._node_edge_repulsion(v, ve, gamma)
                 fe[0] += f[0]
                 fe[1] += f[1]
             # calculation of total force
@@ -166,11 +167,11 @@ class ForceDirectedLayout:
             forces.append(total_force)
         return forces
 
-    def _node_edge_repulsion(v, ve, gamma=1):
+    def _node_edge_repulsion(self, v, ve, gamma=1):
         r"""
             Return the repulsion force between vertex v and edge e, given its projection ve.
         """
-        d = ForceDirectedLayout._dist(v, ve)
+        d = self._dist(v, ve)
         if d > 0:
             fx = 0
             fy = 0
@@ -182,20 +183,20 @@ class ForceDirectedLayout:
             epsilon = np.finfo(np.float32).eps
             return [1 / epsilon, 1 / epsilon]
 
-    def _node_node_attraction(v1, v2, delta=1):
+    def _node_node_attraction(self, v1, v2, delta=1):
         r"""
             Return the attraction force between vertices v1 and v2.
         """
-        d = ForceDirectedLayout._dist(v1, v2)
+        d = self._dist(v1, v2)
         fx = (d / delta) * (v2[0] - v1[0])
         fy = (d / delta) * (v2[1] - v1[1])
         return [fx, fy]
 
-    def _node_node_repulsion(v1, v2, delta=1):
+    def _node_node_repulsion(self, v1, v2, delta=1):
         r"""
             Return the repulsion force between vertices v1 and v2.
         """
-        d = ForceDirectedLayout._dist(v1, v2)
+        d = self._dist(v1, v2)
         if d > 0:
             fx = ((delta / d) ** 2) * (v1[0] - v2[0])
             fy = ((delta / d) ** 2) * (v1[1] - v2[1])
@@ -204,7 +205,7 @@ class ForceDirectedLayout:
             epsilon = np.finfo(np.float32).eps
             return [1 / epsilon, 1 / epsilon]
 
-    def _maximum_displacements(v, e, vertices):
+    def _maximum_displacements(self, v, e, vertices):
         r"""
             Return the maximum displacement (in any direction)
             that vertex 'v' can do without crossing edge 'e'
@@ -223,8 +224,8 @@ class ForceDirectedLayout:
 
         """
         edge_coords = [vertices[e[0]], vertices[e[1]]]  # coordinates of the edge endings
-        ve, distance = Graph._point_edge_projection(v, edge_coords)
-        vector_to_edge = ForceDirectedLayout._dist(v, ve)
+        ve, distance = self.graph._point_edge_projection(v, edge_coords)
+        vector_to_edge = self._dist(v, ve)
         vector_direction = (math.atan2(ve[1] - v[1], ve[0] - v[0]) + 2 * math.pi) % (2 * math.pi)  # between [0,2*pi]
         corresponding_sector = int(vector_direction // (math.pi / 4))  # the circumference is divided into 8 sectors
         safe_displacements = []
@@ -247,11 +248,11 @@ class ForceDirectedLayout:
                     epsilon = np.finfo(np.float32).eps
                     sigma = 1 / epsilon
             else:
-                sigma = 10  # theoretically infinit
+                sigma = 20  # theoretically infinit
             safe_displacements.append(vector_to_edge * sigma / 2)
         return safe_displacements
 
-    def _move_nodes(graph, region, forces, safe_areas):
+    def _move_nodes(self, graph, region, forces, safe_areas):
         r"""
             Move nodes taking into account forces and maximum displacements
         """
@@ -267,6 +268,9 @@ class ForceDirectedLayout:
             shifty = shift * math.sin(force_direction)
             graph.vertices[v][0] += shiftx
             graph.vertices[v][1] += shifty
+            if graph.count_edge_crossings() > 0: #if the movement adds a crossing ==> revert
+                graph.vertices[v][0] -= shiftx
+                graph.vertices[v][1] -= shifty
             if graph.plot:
                 graph.plot_graph()
 
@@ -277,9 +281,9 @@ class ForceDirectedLayout:
     #     line = LineString([e[0], e[1]])
     #     p = Point(v[0], v[1])
     #     nearest_point = list(line.interpolate(line.project(p)).coords[0])  # using shapely to find the nearest point to line
-    #     distance_to_end0 = ForceDirectedLayout._dist(nearest_point, e[0])
-    #     distance_to_end1 = ForceDirectedLayout._dist(nearest_point, e[1])
-    #     edge_length = ForceDirectedLayout._dist(e[0], e[1])
+    #     distance_to_end0 = self._dist(nearest_point, e[0])
+    #     distance_to_end1 = self._dist(nearest_point, e[1])
+    #     edge_length = self._dist(e[0], e[1])
     #     if distance_to_end0 < edge_length:  # check if the point is inside the segment or not
     #         ve = nearest_point
     #     else:  # get the nearest end
@@ -291,30 +295,32 @@ class ForceDirectedLayout:
             Return the lowest displacements for each direction
         """
 
-        surroundings = ForceDirectedLayout._calculate_surroundings(self.graph)
+        surroundings = self._calculate_surroundings()
         for it in range(self.maxIter):
-            qTree = QuadTree(QPoint.arrayToList(self.graph.vertices))
+            qTree = QuadTree(QT.arrayToList(self.graph.vertices))
             #  qTree.plot()
             #####################################################
             # region selection in function of relative area
-            region = ForceDirectedLayout._select_region(self.graph, tol)
+            region = self._select_region(self.graph, tol)
             if region == []:
                 print("Finished")
-                break;
+                break
             #####################################################
             # Step 1
-            forces = ForceDirectedLayout._forces_calculation(self.graph.vertices, region, qTree, surroundings, \
+            forces = self._forces_calculation(self.graph.vertices, region, qTree, surroundings, \
                                                              self.delta, self.gamma)
             #  #Step 2
-            safe_displacements = ForceDirectedLayout._calculate_maximum_movements(self.graph.vertices, \
+            safe_displacements = self._calculate_maximum_movements(self.graph.vertices, \
                                                                                   region, surroundings)
             #  #Step 3
-            ForceDirectedLayout._move_nodes(self.graph, region, forces,  safe_displacements)
+            self._move_nodes(self.graph, region, forces,  safe_displacements)
             # crossings = self.graph.count_edge_crossings()
+            # if crossings > 0:
+            #     break
             print("Iter: "+str(it)+"; Crossings: " + str(self.graph.count_edge_crossings()))
 
 
-    def _select_region(graph, tol=1):
+    def _select_region(self, graph, tol=1):
         r"""
             Return the lowest displacements for each direction
         """
@@ -330,7 +336,7 @@ class ForceDirectedLayout:
         # region = graph.regions[0] if lowest > highest else graph.regions[-1]
         # return region
 
-    def _update_maximum_movements(old_limits, new_limits):
+    def _update_maximum_movements(self, old_limits, new_limits):
         r"""
             Return the lowest displacements for each direction
         """
