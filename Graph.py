@@ -34,6 +34,27 @@ class SurroundingInfo:
         self.connected_to = c # edges that connect the vertex to others in the boundary
 #########################################################
 
+def addLimitPoints(points):
+    r"""
+        Add points in order to close voronoi diagram
+    """
+    means = np.mean(points, axis=0)
+    mins = np.min(points,axis=0)
+    maxs = np.max(points,axis=0)
+    beta = 2
+#    points = np.append(points, [means[0], beta*np.abs(maxs[1])]) # top
+#    points = np.append(points, [means[0], -beta*abs(mins[1])]) # bottom
+#    points = np.append(points, [-beta*abs(mins[0]), means[1]]) # left
+#    points = np.append(points, [beta*abs(maxs[0]), means[1]]) # right
+    
+    points = np.append(points, [-beta*abs(mins[0]+1), beta*np.abs(maxs[1]+1)]) # top-left
+    points = np.append(points, [-beta*abs(mins[0]+1), -beta*abs(mins[1]+1)]) # bottom-left
+    points = np.append(points, [beta*abs(maxs[0]+1),beta*np.abs(maxs[1]+1)]) # top-right
+    points = np.append(points, [beta*abs(maxs[0]+1), -beta*abs(mins[1]+1)]) # bottom-right
+    L = int(points.size)
+    points = points.reshape(int(L/2),2)
+    return points
+    
 class Graph:
 
     def __init__(self, vor):
@@ -42,10 +63,12 @@ class Graph:
         """
         self.vertices = vor.vertices
         self.edges = [ x for x in vor.ridge_vertices if -1 not in x ]
-        self.regions = [ x for x in vor.regions if -1 not in x ][1:] # hay que asegurarse que el primer elementos es [] siempre
+        self.regions = [ x for x in vor.regions if -1 not in x ] 
+        self.regions = [x for x in self.regions if x] # remove empty list
         self.plot = False
         # self.project_to_envelope()
-
+        
+        
     def area(self, region):
         r"""
             Return the area of the region
