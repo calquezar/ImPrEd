@@ -298,7 +298,7 @@ class ForceDirectedLayout:
         surroundings = self._calculate_surroundings()
         for it in range(self.maxIter):
             qTree = QuadTree(QT.arrayToList(self.graph.vertices))
-            #  qTree.plot()
+#            qTree.plot()
             #####################################################
             # region selection in function of relative area
             region = self._select_region(self.graph, tol)
@@ -317,7 +317,8 @@ class ForceDirectedLayout:
             # crossings = self.graph.count_edge_crossings()
             # if crossings > 0:
             #     break
-            print("Iter: "+str(it)+"; Crossings: " + str(self.graph.count_edge_crossings()))
+            print("Iter: "+str(it)+"; Crossings: " + str(self.graph.count_edge_crossings())+ \
+                  "; Regions: " + str(len(self.graph.regions)))
 
 
     def _select_region(self, graph, tol=1):
