@@ -116,7 +116,7 @@ class ForceDirectedLayout:
         """
         return math.sqrt((v1[0] - v2[0]) ** 2 + (v1[1] - v2[1]) ** 2)
 
-    def _forces_calculation(self, vertices, region, qTree, surroundings, delta, gamma):
+    def _forces_calculation(self, region, qTree, surroundings, delta, gamma):
         r"""
             Return the corresponding forces for each vertex
 
@@ -134,16 +134,18 @@ class ForceDirectedLayout:
 
                 - gamma
         """
+        boundary_vertices = self.graph.get_boundary_vertices()
         forces = []
         for i in region:
-            v = vertices[i]
+            v = self.graph.vertices[i]
             sv = surroundings[i]
             fa = [0, 0]
             fr = [0, 0]
             fe = [0, 0]
+            fb = [0, 0]
             # Attraction between connected nodes
             for vIdx in sv.connected_to:
-                vc = vertices[vIdx]
+                vc = self.graph.vertices[vIdx]
                 f = self._node_node_attraction(v, vc, delta)
                 fa[0] += f[0]
                 fa[1] += f[1]
@@ -155,18 +157,38 @@ class ForceDirectedLayout:
                 fr[1] += f[1]
             # repulsion with surrounding edges
             for edge in sv.edges:
-                edge_coords = [vertices[edge[0]], vertices[edge[1]]]
+                edge_coords = [self.graph.vertices[edge[0]],\
+                               self.graph.vertices[edge[1]]]
                 ve, distance = self.graph._point_edge_projection(v, edge_coords)
                 f = self._node_edge_repulsion(v, ve, gamma)
                 fe[0] += f[0]
                 fe[1] += f[1]
+            # attraction to boundary
+            if i in boundary_vertices:
+                f = self._boundary_attraction(v)
+                fb[0] = f[0]
+                fb[1] = f[1]
+#            print(fr,fe,fa,fb)
             # calculation of total force
             total_force = [0, 0]
-            total_force[0] = 2 * fa[0] + fr[0] + fe[0]
-            total_force[1] = 2 * fa[1] + fr[1] + fe[1]
+            total_force[0] = 2 * fa[0] + fr[0] + fe[0] + fb[0]
+            total_force[1] = 2 * fa[1] + fr[1] + fe[1] + fb[1]
             forces.append(total_force)
         return forces
 
+    def _boundary_attraction(self,v):
+        
+        boundary_rect = self.graph.get_boundary_rect()
+        force = [0.0,0.0]
+        for i in range(4):
+            edge = [boundary_rect[i], boundary_rect[(i+1)%4]]
+            ve,dist = self.graph._point_edge_projection(v,edge)
+            f = self._node_node_attraction(v,ve,2)
+            force[0] += f[0]
+            force[1] += f[1]
+        return force
+                
+        
     def _node_edge_repulsion(self, v, ve, gamma=1):
         r"""
             Return the repulsion force between vertex v and edge e, given its projection ve.
@@ -307,8 +329,7 @@ class ForceDirectedLayout:
                 break
             #####################################################
             # Step 1
-            forces = self._forces_calculation(self.graph.vertices, region, qTree, surroundings, \
-                                                             self.delta, self.gamma)
+            forces = self._forces_calculation(region, qTree, surroundings, self.delta, self.gamma)
             #  #Step 2
             safe_displacements = self._calculate_maximum_movements(self.graph.vertices, \
                                                                                   region, surroundings)
