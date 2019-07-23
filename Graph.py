@@ -99,10 +99,10 @@ class Graph:
 
     def get_boundary_rect(self):
         
-        mins = np.min(self.vertices,axis=0)
-        maxs = np.max(self.vertices,axis=0)
+        mins = np.min(self.vertices, axis=0)
+        maxs = np.max(self.vertices, axis=0)
         rect = []
-        rect += [[mins[0],mins[1]]] # bottom-left
+        rect += [[mins[0], mins[1]]] # bottom-left
         rect += [[maxs[0], mins[1]]] # bottom-right
         rect += [[maxs[0], maxs[1]]] # top-right
         rect += [[mins[0], maxs[1]]] # top-left

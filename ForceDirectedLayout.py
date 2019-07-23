@@ -176,14 +176,14 @@ class ForceDirectedLayout:
             forces.append(total_force)
         return forces
 
-    def _boundary_attraction(self,v):
+    def _boundary_attraction(self, v):
         
         boundary_rect = self.graph.get_boundary_rect()
-        force = [0.0,0.0]
+        force = [0.0, 0.0]
         for i in range(4):
-            edge = [boundary_rect[i], boundary_rect[(i+1)%4]]
-            ve,dist = self.graph._point_edge_projection(v,edge)
-            f = self._node_node_attraction(v,ve,2)
+            edge = [boundary_rect[i], boundary_rect[(i+1) % 4]]
+            ve, dist = self.graph._point_edge_projection(v, edge)
+            f = self._node_node_attraction(v, ve, 2)
             force[0] += f[0]
             force[1] += f[1]
         return force

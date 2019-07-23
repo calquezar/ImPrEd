@@ -44,8 +44,8 @@ points = np.array([[-0.2,-0.5],[0, 0], [0.0001, 0.0001], [0, 0.0001],[0.0001, 0]
 points = addLimitPoints(points)
 #print(points)
 vor = Voronoi(points)
-vor.vertices[2][0]=-10000000
-vor.vertices [2][1]=-10000000
+# vor.vertices[2][0]=-10000000
+# vor.vertices [2][1]=-10000000
 #########################################################
 # points = np.array([[1,1], [3, 1], [2, 2], [2,0],[1.7,1],[2.3,1 ],[2,1.7]])
 # vor = Voronoi(points)
@@ -62,10 +62,10 @@ vor.vertices [2][1]=-10000000
 
 # Main algorithm
 delta = 1
-gamma = 1
+gamma = 2
 g = Graph(vor)
 g.plot = True
-maxIter = 10
+maxIter = 50
 tol = 0.2
 # figManager = plt.get_current_fig_manager()
 # figManager.window.showMaximized()
