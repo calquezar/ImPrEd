@@ -97,6 +97,18 @@ class Graph:
                     # print(self.edges[e1],self.edges[e2])
         return crossings
 
+    def get_boundary_rect(self):
+        
+        mins = np.min(self.vertices,axis=0)
+        maxs = np.max(self.vertices,axis=0)
+        rect = []
+        rect += [[mins[0],mins[1]]] # bottom-left
+        rect += [[maxs[0], mins[1]]] # bottom-right
+        rect += [[maxs[0], maxs[1]]] # top-right
+        rect += [[mins[0], maxs[1]]] # top-left
+        return rect
+        
+        
     def get_std_area(self):
         r"""
             Return
@@ -121,7 +133,7 @@ class Graph:
         for e in self.edges:
             count = 0
             for r in self.regions:
-                if Graph.is_in_region(e, r):
+                if self.is_in_region(e, r):
                     count += 1
                 if count > 1:
                     break
