@@ -59,14 +59,15 @@ def addLimitPoints(points):
     
 class Graph:
 
-    def __init__(self, vor):
+    def __init__(self, vor, clockwise=False):
         r"""
             Constructor
         """
         self.vertices = vor.vertices
         self.edges = [ x for x in vor.ridge_vertices if -1 not in x ]
-        self.regions = [ x for x in vor.regions if -1 not in x ] 
+        self.regions = [ x for x in vor.regions if -1 not in x ]
         self.regions = [x for x in self.regions if x] # remove empty list
+        self.sort_all_regions(clockwise)
         self.plot = False
         # self.project_to_envelope()
         
@@ -143,14 +144,16 @@ class Graph:
                 boundary.append(e)
         return boundary
 
-    def get_boundary_vertices(self):
+    def get_boundary_vertices(self, clockwise=False):
         r"""
             Return
         """
         vertices = []
         for e in self.get_boundary_edges():
             vertices += e
-        return list(set(vertices))
+        boundary = list(set(vertices))
+        boundary = self.sort_region_vertices(boundary, clockwise)
+        return boundary
 
     def get_envelope(self):
         r"""
@@ -183,10 +186,8 @@ class Graph:
         return isIn
 
 #################################################################
-    # plot functions
 
     def get_region_boundary(self, region):
-
         edges = []
         for i in range(len(region)-1):
             vertex1 = region[i]
@@ -269,6 +270,12 @@ class Graph:
                 new_ordering.reverse()
 
         return new_ordering
+
+    def sort_all_regions(self, clockwise=False):
+        for r in range(len(self.regions)):
+            region = self.regions[r]
+            self.regions[r] = self.sort_region_vertices(region, clockwise)
+
 
     def colour_region(self, region):
 
