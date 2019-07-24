@@ -24,9 +24,9 @@ from ForceDirectedLayout import ForceDirectedLayout
 #voronoi_plot_2d(vor)
 #plt.show()
 #########################################################
-#points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
-#                    [2, 1], [2, 2]])
-#points = addLimitPoints(points)
+points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
+                   [2, 1], [2, 2]])
+points = addLimitPoints(points)
 #vor = Voronoi(points)
 #vor.vertices[12][0] = 0.0000000005
 #vor.vertices[12][1] = 0.0000000015
@@ -39,9 +39,9 @@ from ForceDirectedLayout import ForceDirectedLayout
 #voronoi_plot_2d(vor)
 #plt.show()
 #########################################################
-points = np.array([[-10,0],[10,0],[0,-10],[0,10],[-0.2,-0.5],[0, 0], [0.0001, 0.0001], [0, 0.0001],[0.0001, 0],[0.00005, 0.00005],[0, 0.0002],[0.0001, 0.0002]])
-points = np.array([[-0.2,-0.5],[0, 0], [0.0001, 0.0001], [0, 0.0001],[0.0001, 0],[0.00005, 0.00005],[0, 0.0002],[0.0001, 0.0002]])
-points = addLimitPoints(points)
+# points = np.array([[-10,0],[10,0],[0,-10],[0,10],[-0.2,-0.5],[0, 0], [0.0001, 0.0001], [0, 0.0001],[0.0001, 0],[0.00005, 0.00005],[0, 0.0002],[0.0001, 0.0002]])
+# points = np.array([[-0.2,-0.5],[0, 0], [0.0001, 0.0001], [0, 0.0001],[0.0001, 0],[0.00005, 0.00005],[0, 0.0002],[0.0001, 0.0002]])
+# points = addLimitPoints(points)
 #print(points)
 vor = Voronoi(points)
 # vor.vertices[2][0]=-10000000
@@ -51,26 +51,25 @@ vor = Voronoi(points)
 # vor = Voronoi(points)
 # vor.vertices[0][0]=1.7
 # vor.vertices[0][1]=1.3
-#voronoi_plot_2d(vor)
-#plt.show()
+# voronoi_plot_2d(vor)
+# plt.show()
 #########################################################
 # vertices = [[0,0],[10,0],[0.1,0.1],[0,10],[10,10]]
 # edges = [[0,1],[0,2],[0,3],[1,2],[1,4],[2,3],[2,4],[3,4]]
 # regions = [[0,1,2],[0,2,3],[1,2,4],[2,3,4]]
-######################################################### #TODO
-
-
-# Main algorithm
+#########################################################
+# # Main algorithm
 delta = 1
 gamma = 2
 g = Graph(vor)
 g.plot = True
-maxIter = 50
+#########################################################
+
+#########################################################
+# # Force algorithm
+maxIter = 100
 tol = 0.2
 # figManager = plt.get_current_fig_manager()
 # figManager.window.showMaximized()
 f = ForceDirectedLayout(g, delta,gamma,maxIter)
 f.run(tol)
-
-
-#points = np.array([[-10,0],[10,0],[0,0],[0,10]])

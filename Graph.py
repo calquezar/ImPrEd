@@ -25,6 +25,8 @@ import numpy as np
 import math
 from matplotlib import pyplot as plt
 from shapely.geometry import LineString, Point, Polygon
+from shapely.geometry.polygon import LinearRing
+from descartes.patch import PolygonPatch
 import statistics
 
 class SurroundingInfo:
@@ -180,6 +182,108 @@ class Graph:
                 break
         return isIn
 
+#################################################################
+    # plot functions
+
+    def get_region_edges(self, region):
+
+        edges = []
+        for i in range(len(region)-1):
+            vertex1 = region[i]
+            for j in range(i+1, len(region)):
+                vertex2 = region[j]
+
+                edge = [vertex1, vertex2] if vertex1 < vertex2 else [vertex2, vertex1]
+                if edge in self.edges:
+                    edges.append(edge)
+        return edges
+
+    def get_region_coords(self, region):
+
+        coords = []
+        for v in region:
+            coords.append(self.vertices[v])
+        return coords
+
+    def is_ccw(self, region):
+        coords = self.get_region_coords(region)
+        ring = LinearRing(coords)
+        if ring.is_ccw:
+            return True
+        else:
+            return False
+
+
+    def find_consecutive_edge(self, edge, common_vertex, list_edges):
+
+        for e in list_edges:
+            if e != edge and common_vertex in e:
+                return e
+
+
+    def sort_region_vertices(self, region, clockwise=False):
+
+        # firts get the region boundary
+        edges = self.get_region_edges(region)
+        # select the first edge of the list
+        e = edges[0]
+        # create the new list (initially empty)
+        new_ordering = []
+        # the first vertex will be the first end of the edge 'e'
+        new_ordering.append(e[0])
+        # now follow the boundary of the region
+        next_vertex = e[1]
+        next_edge = self.find_consecutive_edge(e, next_vertex, edges)
+        while next_vertex != new_ordering[0]:
+            # add new vertex to list
+            new_ordering.append(next_vertex)
+            # get the other ending of the edge
+            next_vertex = next_edge[0] if next_edge[0] != next_vertex else next_edge[1]
+            next_edge = self.find_consecutive_edge(next_edge, next_vertex, edges)
+
+        if clockwise:
+            if self.is_ccw(new_ordering):
+                new_ordering.reverse()
+        else:
+            if not self.is_ccw(new_ordering):
+                new_ordering.reverse()
+
+        return new_ordering
+
+    def colour_region(self, r):
+
+        region = self.regions[r]
+        points = []
+        for v in region:
+            points.append(self.vertices[v])
+
+        polygon = Polygon(points)
+        patch = PolygonPatch(polygon, facecolor=[0, 0, 0.5], edgecolor=[0, 0, 0], alpha=0.7, zorder=2)
+        ax = plt.gca()
+        ax.add_patch(patch)
+        plt.pause(0.5)
+
+    def colour_region_edges(self, r, sorted=False, clockwise=False):
+        region = self.regions[r]
+        if sorted:
+            region = self.sort_region_vertices(region, clockwise)
+            for i in range(len(region)):
+                e = [region[i], region[(i + 1) % (len(region))]]
+                self.colour_edge(e)
+        else:
+            edges = self.get_region_edges(region)
+            for e in edges:
+                self.colour_edge(e)
+
+
+    def colour_edge(self, e):
+        v0 = self.vertices[e[0]]
+        v1 = self.vertices[e[1]]
+        x = [v0[0], v1[0]]
+        y = [v0[1], v1[1]]
+        plt.plot(x, y, color='r')
+        plt.pause(0.5)
+
     def plot_graph(self):
         r"""
             Plot graph
@@ -197,6 +301,8 @@ class Graph:
         axes.set_xlim([vmin - 0.1, vmax + 0.1])
         axes.set_ylim([vmin - 0.1, vmax + 0.1])
         plt.pause(0.1)
+
+##############################################################################################
 
     def _point_edge_projection(self, v, e):
         r"""

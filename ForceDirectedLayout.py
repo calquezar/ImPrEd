@@ -34,8 +34,7 @@ import numpy as np
 import math
 import QuadTree as QT
 from QuadTree import QPoint, QuadTree
-from shapely.geometry import LineString, Point, Polygon
-from Graph import Graph, SurroundingInfo
+from Graph import SurroundingInfo
 
 class ForceDirectedLayout:
 

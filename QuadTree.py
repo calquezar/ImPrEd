@@ -1,11 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jul  9 09:40:03 2019
+r"""
+QuadTree data structure
+...description...
 
-@author: calquezar
+REFERENCES:
+-
+
+AUTHORS:
+- Carlos Alquézar Baeta
 """
-###########################################################################
+
+# ****************************************************************************
+#       Copyright (C) 2019  Carlos Alquézar Baeta
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#                  https://www.gnu.org/licenses/
+# ****************************************************************************
+
 from matplotlib import pyplot as plt
 from matplotlib import patches
 import math
