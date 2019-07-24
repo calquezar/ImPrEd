@@ -185,14 +185,13 @@ class Graph:
 #################################################################
     # plot functions
 
-    def get_region_edges(self, region):
+    def get_region_boundary(self, region):
 
         edges = []
         for i in range(len(region)-1):
             vertex1 = region[i]
             for j in range(i+1, len(region)):
                 vertex2 = region[j]
-
                 edge = [vertex1, vertex2] if vertex1 < vertex2 else [vertex2, vertex1]
                 if edge in self.edges:
                     edges.append(edge)
@@ -213,18 +212,39 @@ class Graph:
         else:
             return False
 
+    def get_regions_by_edge(self, e):
 
-    def find_consecutive_edge(self, edge, common_vertex, list_edges):
+        if e[1] < e[0]:
+            e.reverse()
+        regions = []
+        for r in self.regions:
+            boundary = self.get_region_boundary(r)
+            if e in  boundary:
+                regions.append(r)
+                if len(regions) == 2:
+                    break
+        return regions
+
+    def get_consecutive_edge(self, edge, common_vertex, list_edges):
 
         for e in list_edges:
             if e != edge and common_vertex in e:
                 return e
 
+    # def get_edges_by_vertex_in_region(self, vertex, region):
+    #
+    #     boundary = self.get_region_boundary(region)
+    #     edges = []
+    #     for e in boundary:
+    #         if vertex in e:
+    #             edges.append(e)
+    #     return edges
+
 
     def sort_region_vertices(self, region, clockwise=False):
 
         # firts get the region boundary
-        edges = self.get_region_edges(region)
+        edges = self.get_region_boundary(region)
         # select the first edge of the list
         e = edges[0]
         # create the new list (initially empty)
@@ -233,13 +253,13 @@ class Graph:
         new_ordering.append(e[0])
         # now follow the boundary of the region
         next_vertex = e[1]
-        next_edge = self.find_consecutive_edge(e, next_vertex, edges)
+        next_edge = self.get_consecutive_edge(e, next_vertex, edges)
         while next_vertex != new_ordering[0]:
             # add new vertex to list
             new_ordering.append(next_vertex)
             # get the other ending of the edge
             next_vertex = next_edge[0] if next_edge[0] != next_vertex else next_edge[1]
-            next_edge = self.find_consecutive_edge(next_edge, next_vertex, edges)
+            next_edge = self.get_consecutive_edge(next_edge, next_vertex, edges)
 
         if clockwise:
             if self.is_ccw(new_ordering):
@@ -250,9 +270,8 @@ class Graph:
 
         return new_ordering
 
-    def colour_region(self, r):
+    def colour_region(self, region):
 
-        region = self.regions[r]
         points = []
         for v in region:
             points.append(self.vertices[v])
@@ -263,15 +282,14 @@ class Graph:
         ax.add_patch(patch)
         plt.pause(0.5)
 
-    def colour_region_edges(self, r, sorted=False, clockwise=False):
-        region = self.regions[r]
+    def colour_region_edges(self, region, sorted=False, clockwise=False):
         if sorted:
             region = self.sort_region_vertices(region, clockwise)
             for i in range(len(region)):
                 e = [region[i], region[(i + 1) % (len(region))]]
                 self.colour_edge(e)
         else:
-            edges = self.get_region_edges(region)
+            edges = self.get_region_boundary(region)
             for e in edges:
                 self.colour_edge(e)
 

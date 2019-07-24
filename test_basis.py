@@ -12,7 +12,17 @@ vor = Voronoi(points)
 
 g = Graph(vor)
 
-for r in range(len(g.regions)):
+# # check region-relative colouring
+# for r in g.regions:
+#     g.plot_graph()
+#     g.colour_region(r)
+#     g.colour_region_edges(r, sorted=True, clockwise=False)
+
+# check edge-relative colouring
+for edge in g.edges:
     g.plot_graph()
-    g.colour_region(r)
-    g.colour_region_edges(r, sorted=True, clockwise=True)
+    g.colour_edge(edge)
+    regions = g.get_regions_by_edge(edge)
+    for r in regions:
+        g.colour_region(r)
+
