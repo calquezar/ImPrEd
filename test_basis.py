@@ -42,6 +42,7 @@ g = Graph(vor)
 
 # # plot boundary regions only
 # boundary_vertices = g.get_boundary_vertices(clockwise=False)
+# g.plot_graph()
 # for i in range(len(boundary_vertices)):
 #     v0 = boundary_vertices[i]
 #     v1 = boundary_vertices[(i+1)%len(boundary_vertices)]
@@ -50,11 +51,54 @@ g = Graph(vor)
 #     g.colour_region(region)
 
 
-boundary_vertices = g.get_boundary_vertices(clockwise=False)
-v0 = boundary_vertices[0]
-v1 = boundary_vertices[1]
-edge0 = [v0, v1] if v0 < v1 else [v1, v0]
-region = g.get_regions_by_edge(edge0)[0]
-region = np.roll(region, -region.index(v0)).tolist()
+# # # remove boundary regions only, one-by-one
+# boundary_vertices = g.get_boundary_vertices(clockwise=False)
+# g2 = g.copy()
+# for i in range(len(boundary_vertices)):
+#     v0 = boundary_vertices[i]
+#     v1 = boundary_vertices[(i+1)%len(boundary_vertices)]
+#     e = [v0, v1] if v0 < v1 else [v1, v0]
+#     if e in g2.get_boundary_edges():
+#         region = g2.get_regions_by_edge(e)[0]
+#         g2.plot_graph()
+#         g2.colour_region(region)
+#         g2 = g2.remove_region(region)
+#         g2.plot_graph()
 
-boundary_edges = g.get_boundary_edges()
+def find_path(g, v0=[], edge=[], boundary_edges=[], clockwise=False):
+    results = []
+    if not v0:
+        boundary_vertices = g.get_boundary_vertices(clockwise)
+        v0 = boundary_vertices[0]
+        v1 = boundary_vertices[1]
+        edge = [v0, v1] if v0 < v1 else [v1, v0]
+    else:
+        v1 = edge[0] if edge[0] != v0 else edge[1]
+    regions = g.get_regions_by_edge(edge)
+    if regions:
+        region = regions[0] # only one region because the edge is on the boundary of the graph
+        g.colour_region(region)
+        sorted_region = np.roll(region, -region.index(v0)).tolist() # sort region with v0 as first element
+        if not boundary_edges:
+            boundary_edges = g.get_boundary_edges()
+        next_edge = g.get_consecutive_edge(edge, v1, boundary_edges)
+        v0 = v1
+        v1 = next_edge[0] if next_edge[0] != v0 else next_edge[1]
+        g.plot_graph()
+        for i in range(len(sorted_region)):
+            e = [sorted_region[i], sorted_region[(i+1)%len(sorted_region)]]
+            e = [e[0], e[1]] if e[0] < e[1] else [e[1], e[0]]
+            # g.colour_edge(e)
+            if e in boundary_edges:
+                results = [e] + results
+                if e == next_edge: # update the consecutive edge on the boundary of the graph
+                    next_edge = g.get_consecutive_edge(e, v1, boundary_edges)
+                    v0 = v1
+                    v1 = next_edge[0] if next_edge[0] != v0 else next_edge[1]
+            else:
+                if len(g.regions) > 0:
+                    g2 = g.remove_region(region)
+                    results = find_path(g2, v0, next_edge, boundary_edges, clockwise) + [e] + results
+    return results
+
+edges = find_path(g)

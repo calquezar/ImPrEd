@@ -23,6 +23,7 @@ AUTHORS:
 
 import numpy as np
 import math
+import copy
 from matplotlib import pyplot as plt
 from shapely.geometry import LineString, Point, Polygon
 from shapely.geometry.polygon import LinearRing
@@ -31,9 +32,9 @@ import statistics
 
 class SurroundingInfo:
     def __init__(self, v, e, c):
-        self.vertices = v # vertices in the boundary of the surrounding area
-        self.edges = e # edges forming the boundary of the surrounding area
-        self.connected_to = c # edges that connect the vertex to others in the boundary
+        self.vertices = v.copy() # vertices in the boundary of the surrounding area
+        self.edges = e.copy() # edges forming the boundary of the surrounding area
+        self.connected_to = c.copy() # edges that connect the vertex to others in the boundary
 #########################################################
 
 def addLimitPoints(points):
@@ -64,14 +65,16 @@ class Graph:
             Constructor
         """
         self.vertices = vor.vertices
-        self.edges = [ x for x in vor.ridge_vertices if -1 not in x ]
-        self.regions = [ x for x in vor.regions if -1 not in x ]
+        self.edges = [x for x in vor.ridge_vertices if -1 not in x]
+        self.regions = [x for x in vor.regions if -1 not in x]
         self.regions = [x for x in self.regions if x] # remove empty list
         self.sort_all_regions(clockwise)
         self.plot = False
         # self.project_to_envelope()
         
-        
+    def copy(self):
+        return copy.deepcopy(self)
+
     def area(self, region):
         r"""
             Return the area of the region
@@ -151,7 +154,7 @@ class Graph:
         vertices = []
         for e in self.get_boundary_edges():
             vertices += e
-        boundary = list(set(vertices))
+        boundary = list(set(vertices)) # remove redundancies
         boundary = self.sort_region_vertices(boundary, clockwise)
         return boundary
 
@@ -198,6 +201,16 @@ class Graph:
                     edges.append(edge)
         return edges
 
+    # def get_region_boundary(self, region):
+    #     edges = []
+    #     for i in range(len(region)):
+    #         vertex1 = region[i]
+    #         vertex2 = region[(i+1)%len(region)]
+    #         edge = [vertex1, vertex2] if vertex1 < vertex2 else [vertex2, vertex1]
+    #         if edge in self.edges:
+    #             edges.append(edge)
+    #     return edges
+
     def get_region_coords(self, region):
 
         coords = []
@@ -240,6 +253,18 @@ class Graph:
     #         if vertex in e:
     #             edges.append(e)
     #     return edges
+
+    def remove_region(self, region):
+
+        new_graph = self.copy()
+        if region in new_graph.regions:
+            graph_boundary = new_graph.get_boundary_edges()
+            region_boundary = new_graph.get_region_boundary(region)
+            for e in region_boundary:
+                if e in graph_boundary:
+                    new_graph.edges.remove(e)
+            new_graph.regions.remove(region)
+        return new_graph
 
 
     def sort_region_vertices(self, region, clockwise=False):
@@ -307,7 +332,7 @@ class Graph:
         x = [v0[0], v1[0]]
         y = [v0[1], v1[1]]
         plt.plot(x, y, color='r')
-        plt.pause(0.5)
+        plt.pause(1)
 
     def plot_graph(self):
         r"""
