@@ -65,7 +65,10 @@ g = Graph(vor)
 
 g.sort_all_regions(clockwise=False)
 def find_path(g, edge, vertex_ending, source_path=[], clockwise=False):
-
+r"""
+    Falta concatenar los caminos en la recursión y
+    que la función devuelva el camino resultante
+"""
     regions = g.get_regions_by_edge(edge)
     if regions:
         region = regions[0]  # only one region because the edge is on the boundary of the graph
