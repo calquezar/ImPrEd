@@ -81,28 +81,34 @@ def find_path(g, edge, vertex_ending, source_path=[], clockwise=False):
         else:
             shift = index0 if index0 < index1 else index1
         region = np.roll(region, -shift).tolist()
-        g.plot_graph()
+        # g.plot_graph()
         # for e in source_path:
         #     g.colour_edge(e)
-        for i in range(len(region)):
-            e = [region[i], region[(i+1)%len(region)]]
-            e = [e[0], e[1]] if e[0] < e[1] else [e[1], e[0]]
-            g.colour_edge(e)
+        # for i in range(len(region)):
+        #     e = [region[i], region[(i+1)%len(region)]]
+        #     e = [e[0], e[1]] if e[0] < e[1] else [e[1], e[0]]
+        #     g.colour_edge(e)
+        source_path += [edge]
         boundary_edges = g.get_boundary_edges()
         next_edge = g.get_consecutive_edge(edge, vertex_ending, boundary_edges)
-        if not g.is_in_region(next_edge, region) or len(g.regions)==1:
-            region = np.roll(region, shift).tolist()  # restore the default value of the region
-            g2 = g.remove_region(region)
-        else:
-            g2 = g
         vertex_ending = next_edge[0] if next_edge[0] != vertex_ending else next_edge[1]
-        source_path += [edge]
-        find_path(g2, next_edge, vertex_ending, source_path, clockwise)
+        while g.is_in_region(next_edge, region) and len(g.regions) > 1:
+            source_path += [next_edge]
+            next_edge = g.get_consecutive_edge(next_edge, vertex_ending, boundary_edges)
+            vertex_ending = next_edge[0] if next_edge[0] != vertex_ending else next_edge[1]
+        region = np.roll(region, shift).tolist()  # restore the default value of the region
+        find_path(g.remove_region(region), next_edge, vertex_ending, source_path, clockwise)
     else:
         print("No regions")
+    return source_path
+
 
 boundary_vertices = g.get_boundary_vertices(clockwise=False)
 v0 = boundary_vertices[0]
 v1 = boundary_vertices[1]
 edge = [v0, v1] if v0 < v1 else [v1, v0]
-find_path(g, edge, v1)
+path = find_path(g, edge, v1)
+
+g.plot_graph()
+for e in path:
+    g.colour_edge(e)

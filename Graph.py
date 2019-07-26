@@ -233,7 +233,7 @@ class Graph:
         regions = []
         for r in self.regions:
             boundary = self.get_region_boundary(r)
-            if e in  boundary:
+            if e in boundary:
                 regions.append(r)
                 if len(regions) == 2:
                     break
