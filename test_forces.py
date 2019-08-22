@@ -59,7 +59,14 @@ elif case == 4:
     vor = Voronoi(points)
     vor.vertices[0][0]=1.7
     vor.vertices[0][1]=1.3
+elif case == 5:
+    points = np.array(
+        [[-0.2, -0.5], [0, 0], [0.0001, 0.0001], [0, 0.0001], [0.0001, 0], [0.00005, 0.00005], [0, 0.0002],
+         [0.0001, 0.0002]])
+    points = addLimitPoints(points)
+    vor = Voronoi(points)
 
+# voronoi_plot_2d(vor)
 #####################################################################
 # Main algorithm
 g = Graph(vor)

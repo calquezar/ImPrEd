@@ -42,20 +42,21 @@ def addLimitPoints(points):
         Add points in order to close voronoi diagram
     """
     means = np.mean(points, axis=0)
-    mins = np.min(points,axis=0)
-    maxs = np.max(points,axis=0)
+    mins = np.min(points, axis=0)
+    maxs = np.max(points, axis=0)
     beta = 2
-#    points = np.append(points, [means[0], beta*np.abs(maxs[1])]) # top
-#    points = np.append(points, [means[0], -beta*abs(mins[1])]) # bottom
-#    points = np.append(points, [-beta*abs(mins[0]), means[1]]) # left
-#    points = np.append(points, [beta*abs(maxs[0]), means[1]]) # right
+
+    # points = np.append(points, [means[0], beta*np.abs(maxs[1])]) # top
+    # points = np.append(points, [means[0], -beta*abs(mins[1])]) # bottom
+    # points = np.append(points, [-beta*abs(mins[0]), means[1]]) # left
+    # points = np.append(points, [beta*abs(maxs[0]), means[1]]) # right
     
     points = np.append(points, [-beta*abs(mins[0]+1), beta*np.abs(maxs[1]+1)]) # top-left
     points = np.append(points, [-beta*abs(mins[0]+1), -beta*abs(mins[1]+1)]) # bottom-left
     points = np.append(points, [beta*abs(maxs[0]+1),beta*np.abs(maxs[1]+1)]) # top-right
     points = np.append(points, [beta*abs(maxs[0]+1), -beta*abs(mins[1]+1)]) # bottom-right
     L = int(points.size)
-    points = points.reshape(int(L/2),2)
+    points = points.reshape(int(L/2), 2)
     return points
     
 class Graph:
