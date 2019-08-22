@@ -166,8 +166,8 @@ class ForceDirectedLayout:
                 fe[0] += f[0]
                 fe[1] += f[1]
             # attraction to boundary
-            if i in boundary_vertices:
-                fb = self._boundary_attraction(v)
+            # if i in boundary_vertices:
+            #     fb = self._boundary_attraction(v)
             # print(fr,fe,fa,fb)
             # calculation of total force
             total_force = [0, 0]

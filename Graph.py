@@ -414,8 +414,8 @@ class Graph:
             self.vertices[i] = [radius*math.cos(angle), radius*math.sin(angle)]
         # normalize all vertices to the circumference of radius 1
         for i in range(len(self.vertices)):
-            self.vertices[i][0] /= radius
-            self.vertices[i][1] /= radius
+            self.vertices[i][0] /= radius/100  # normalized in the range [0, 100]
+            self.vertices[i][1] /= radius/100  # normalized in the range [0, 100]
 
         # for v in boundary_vertices:
         #     self.vertices[v] = new_vertices.pop()
