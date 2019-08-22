@@ -32,9 +32,9 @@ import statistics
 
 class SurroundingInfo:
     def __init__(self, v, e, c):
-        self.vertices = v.copy() # vertices in the boundary of the surrounding area
-        self.edges = e.copy() # edges forming the boundary of the surrounding area
-        self.connected_to = c.copy() # edges that connect the vertex to others in the boundary
+        self.vertices = v.copy()  # vertices in the boundary of the surrounding area
+        self.edges = e.copy()  # edges forming the boundary of the surrounding area
+        self.connected_to = c.copy()  # edges that connect the vertex to others in the boundary
 #########################################################
 
 def addLimitPoints(points):
@@ -67,7 +67,7 @@ class Graph:
         self.vertices = vor.vertices
         self.edges = [x for x in vor.ridge_vertices if -1 not in x]
         self.regions = [x for x in vor.regions if -1 not in x]
-        self.regions = [x for x in self.regions if x] # remove empty list
+        self.regions = [x for x in self.regions if x]  # remove empty list
         self.sort_all_regions(clockwise)
         self.plot = False
         # self.project_to_envelope()
@@ -103,6 +103,12 @@ class Graph:
                     # print(self.edges[e1],self.edges[e2])
         return crossings
 
+    def _dist(self, v1, v2):
+        r"""
+            Return the euclidean distance between vertices v1 and v2.
+        """
+        return math.sqrt((v1[0] - v2[0]) ** 2 + (v1[1] - v2[1]) ** 2)
+
     def get_boundary_rect(self):
         
         mins = np.min(self.vertices, axis=0)
@@ -113,8 +119,7 @@ class Graph:
         rect += [[maxs[0], maxs[1]]] # top-right
         rect += [[mins[0], maxs[1]]] # top-left
         return rect
-        
-        
+
     def get_std_area(self):
         r"""
             Return
@@ -187,8 +192,6 @@ class Graph:
                 isIn = False
                 break
         return isIn
-
-#################################################################
 
     def get_region_boundary(self, region):
         edges = []
@@ -266,7 +269,6 @@ class Graph:
             new_graph.regions.remove(region)
         return new_graph
 
-
     def sort_region_vertices(self, region, clockwise=False):
 
         # firts get the region boundary
@@ -301,7 +303,6 @@ class Graph:
             region = self.regions[r]
             self.regions[r] = self.sort_region_vertices(region, clockwise)
 
-
     def colour_region(self, region):
 
         points = []
@@ -324,7 +325,6 @@ class Graph:
             edges = self.get_region_boundary(region)
             for e in edges:
                 self.colour_edge(e)
-
 
     def colour_edge(self, e):
         v0 = self.vertices[e[0]]
@@ -387,3 +387,40 @@ class Graph:
     #                 min_distance = distance
     #                 new_coords = projection
     #         self.vertices[v] = new_coords
+
+    def project_boundary_to_circumcircle(self):
+        boundary_vertices = self.get_boundary_vertices(clockwise=True)
+        N = len(boundary_vertices)  # number or boundary vertices
+        # calculation of the center of the circumcicle
+        mass_center = [0, 0]
+        for v in boundary_vertices:
+            mass_center[0] += self.vertices[v][0]/N
+            mass_center[1] += self.vertices[v][1]/N
+        # center the graph to the origin
+        for i in range(len(self.vertices)):
+            self.vertices[i][0] -= mass_center[0]
+            self.vertices[i][1] -= mass_center[1]
+        mass_center = [0, 0]  # Now the center of mass is the origin
+        # calculation of the radius of the circumcicle
+        radius = 0
+        for i in boundary_vertices:
+            v = self.vertices[i]
+            dist = self._dist(v, mass_center)
+            radius = dist if dist > radius else radius
+        # calculate the new boundary coordinates
+        for i in boundary_vertices:
+            v = self.vertices[i]
+            angle = math.atan2(v[1], v[0])
+            self.vertices[i] = [radius*math.cos(angle), radius*math.sin(angle)]
+        # normalize all vertices to the circumference of radius 1
+        for i in range(len(self.vertices)):
+            self.vertices[i][0] /= radius
+            self.vertices[i][1] /= radius
+
+        # for v in boundary_vertices:
+        #     self.vertices[v] = new_vertices.pop()
+
+        # self.plot_graph()
+        # c = plt.Circle(mass_center, radius)
+        # ax = plt.gca()
+        # ax.add_artist(c)

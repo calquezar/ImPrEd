@@ -121,11 +121,14 @@ class QNode:
 class QuadTree:
 
     def __init__(self, points, threshold=1):
+        """
+        :rtype: object
+        """
         self.threshold = threshold
         self.root = self.generateTree(points)
 
     def __str__(self):
-        if (self.root != []):
+        if self.root:  # self.root != []
             return self.root.__str__()
         else:
             return "Empty tree"

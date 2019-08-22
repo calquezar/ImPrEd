@@ -59,10 +59,12 @@ vor = Voronoi(points)
 # regions = [[0,1,2],[0,2,3],[1,2,4],[2,3,4]]
 #########################################################
 # # Main algorithm
-delta = 1
-gamma = 2
+delta = 0.1
+gamma = 0.1
+theta = 0.1
 g = Graph(vor)
 g.plot = True
+# g.project_boundary_to_circumcircle()
 #########################################################
 
 #########################################################
@@ -71,5 +73,5 @@ maxIter = 100
 tol = 0.2
 # figManager = plt.get_current_fig_manager()
 # figManager.window.showMaximized()
-f = ForceDirectedLayout(g, delta,gamma,maxIter)
+f = ForceDirectedLayout(g, delta, gamma, theta, maxIter)
 f.run(tol)
