@@ -7,10 +7,11 @@ from scipy.spatial import Voronoi, voronoi_plot_2d
 from Graph import Graph, addLimitPoints
 from ForceDirectedLayout import ForceDirectedLayout
 
+#####################################################################
 delta = 10
 gamma = 1
 theta = 0.1
-case = 1
+case = 0
 if case == 0:
     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
                        [2, 1], [2, 2], [-5, 5], [5, 5], [5, -5], [-5, -5]])
@@ -48,7 +49,7 @@ elif case == 2:
          [0.00005, 0.00005], [0, 0.0002], [0.0001, 0.0002]])
     points = addLimitPoints(points)
     vor = Voronoi(points)
-elif case == 3:
+elif case == 3:  # be careful with concave polygons and the centroid of the graph
     points = np.array(
         [[-0.2, -0.5], [0, 0], [0.0001, 0.0001], [0, 0.0001], [0.0001, 0], [0.00005, 0.00005], [0, 0.0002],
          [0.0001, 0.0002]])
@@ -71,6 +72,7 @@ elif case == 5:
 # Main algorithm
 g = Graph(vor)
 g.plot = True
+# g.plot_graph()
 # Force algorithm
 maxIter = 100
 tol = 0.2

@@ -65,14 +65,14 @@ class Graph:
         r"""
             Constructor
         """
-        self.vertices = vor.vertices
-        self.edges = [x for x in vor.ridge_vertices if -1 not in x]
-        self.regions = [x for x in vor.regions if -1 not in x]
-        self.regions = [x for x in self.regions if x]  # remove empty list
+        self.vertices = copy.deepcopy(vor.vertices)
+        self.edges = [copy.deepcopy(x) for x in vor.ridge_vertices if -1 not in x]
+        self.regions = [copy.deepcopy(x) for x in vor.regions if -1 not in x]
+        self.regions = [copy.deepcopy(x) for x in self.regions if x]  # remove empty list
         self.sort_all_regions(clockwise)
         self.plot = False
-        # self.project_to_envelope()
-        
+        self.make_convex_boundary()
+
     def copy(self):
         return copy.deepcopy(self)
 
@@ -335,7 +335,7 @@ class Graph:
         plt.plot(x, y, color='r')
         plt.pause(1)
 
-    def plot_graph(self):
+    def plot_graph(self, pause=0.1):
         r"""
             Plot graph
         """
@@ -351,7 +351,7 @@ class Graph:
         vmax = np.amax(self.vertices)
         axes.set_xlim([vmin - 0.1, vmax + 0.1])
         axes.set_ylim([vmin - 0.1, vmax + 0.1])
-        plt.pause(0.1)
+        plt.pause(pause)
 
 ##############################################################################################
 
@@ -389,35 +389,65 @@ class Graph:
     #                 new_coords = projection
     #         self.vertices[v] = new_coords
 
+    def center_graph(self, center=[]):
+        if not center:  # By default, the graph is centered using the centroid
+            center = [0, 0]
+            for v in self.vertices:
+                center[0] += v[0]/len(self.vertices)
+                center[1] += v[1]/len(self.vertices)
+        # center the graph to the origin
+        for i in range(len(self.vertices)):
+            self.vertices[i][0] -= center[0]
+            self.vertices[i][1] -= center[1]
+
+    # def normalize_graph(self, max=[]):
+    #     if not max:
+    #         max = 1
+    #     norm = 0.0
+    #     for v in self.vertices:
+    #         module = math.sqrt(v[0]**2+v[1]**2)
+    #         norm = module if module > norm else norm
+    #     for i in range(len(self.vertices)):
+    #         self.vertices[i][0] /= norm/max
+    #         self.vertices[i][1] /= norm/max
+
     def project_boundary_to_circumcircle(self):
         boundary_vertices = self.get_boundary_vertices(clockwise=True)
         N = len(boundary_vertices)  # number or boundary vertices
         # calculation of the center of the circumcicle
-        mass_center = [0, 0]
-        for v in boundary_vertices:
-            mass_center[0] += self.vertices[v][0]/N
-            mass_center[1] += self.vertices[v][1]/N
-        # center the graph to the origin
-        for i in range(len(self.vertices)):
-            self.vertices[i][0] -= mass_center[0]
-            self.vertices[i][1] -= mass_center[1]
-        mass_center = [0, 0]  # Now the center of mass is the origin
+        # points = [self.vertices[v] for v in boundary_vertices]
+        # pol = Polygon(points)
+        # center = pol.representative_point().coords[0]
+        self.center_graph()
+        # self.normalize_graph(100)
+        origin = (0, 0)  # Now we take the origin as the center
         # calculation of the radius of the circumcicle
         radius = 0
         for i in boundary_vertices:
             v = self.vertices[i]
-            dist = self._dist(v, mass_center)
+            dist = self._dist(v, origin)
             radius = dist if dist > radius else radius
+        ####### alternativa 1
+        # for iteration in range(10):
+        #     for index in boundary_vertices:
+        #         v = self.vertices[index]
+        #         module = math.sqrt(v[0]**2+v[1]**2)
+        #         angle = math.atan2(v[1], v[0])
+        #         x = v[0] + (radius**2-module**2)*math.cos(angle)
+        #         y = v[1] + (radius**2-module**2)*math.sin(angle)
+        #         self.vertices[index] = [x, y]
+        #         self.plot_graph()
+        ####### alternativa 2
         # calculate the new boundary coordinates
         for i in boundary_vertices:
             v = self.vertices[i]
             angle = math.atan2(v[1], v[0])
             self.vertices[i] = [radius*math.cos(angle), radius*math.sin(angle)]
-        # normalize all vertices to the circumference of radius 1
+        # normalize all vertices to the circumference of radius 100
         for i in range(len(self.vertices)):
             self.vertices[i][0] /= radius/100  # normalized in the range [0, 100]
             self.vertices[i][1] /= radius/100  # normalized in the range [0, 100]
-
+        #######
         # for v in boundary_vertices:
         #     self.vertices[v] = new_vertices.pop()
 
@@ -425,3 +455,59 @@ class Graph:
         # c = plt.Circle(mass_center, radius)
         # ax = plt.gca()
         # ax.add_artist(c)
+
+    def make_convex_boundary(self):
+        boundary_vertices = self.get_boundary_vertices(clockwise=False)
+        n = len(boundary_vertices)
+        count = 0
+        while count < n:
+            for i in range(len(boundary_vertices)):
+                plt.cla()
+                for b in boundary_vertices:
+                    plt.scatter(self.vertices[b][0], self.vertices[b][1])
+                # plt.pause(1)
+                points = [self.vertices[v] for v in boundary_vertices if v != boundary_vertices[i]]
+                pol = Polygon(points)
+                x, y = pol.exterior.xy
+                # plt.plot(x, y)
+                vertex = Point(self.vertices[boundary_vertices[i]])
+                if pol.contains(vertex):  # it is not convex
+                    count = 0
+                    vertex = boundary_vertices[i]
+                    # print("Está dentro" + str(i))
+                    v0 = boundary_vertices[(i - 1) % n]
+                    v2 = boundary_vertices[(i + 1) % n]
+                    # we apply the cosine theorem to calculte the angle v0-vertex-v2
+                    a = LineString([self.vertices[v0], self.vertices[vertex]])
+                    b = LineString([self.vertices[vertex], self.vertices[v2]])
+                    c = LineString([self.vertices[v2], self.vertices[v0]])
+                    cosAngle = (c.length**2-a.length**2-b.length**2)/(-2*a.length*b.length)
+                    angle = math.acos(cosAngle)
+                    # now we calculate the bisector
+                    vx = self.vertices[v0][0] - self.vertices[vertex][0]
+                    vy = self.vertices[v0][1] - self.vertices[vertex][1]
+                    bisector_angle = math.atan2(vy, vx) + angle/2
+                    self.vertices[vertex][0] += 10*math.cos(bisector_angle)
+                    self.vertices[vertex][1] += 10*math.sin(bisector_angle)
+                else:
+                    count += 1
+                self.plot_graph(0.5)
+
+        # n = len(boundary_vertices)
+        # for it in range(1):
+        #     for i in range(len(boundary_vertices)):
+        #         points = [self.vertices[v] for v in boundary_vertices if v != boundary_vertices[i]]
+        #         pol = Polygon(points)
+        #         vertex = Point(self.vertices[boundary_vertices[i]])
+        #         if pol.contains(vertex):  # it is not convex
+        #             v0 = boundary_vertices[(i - 1) % n]
+        #             v2 = boundary_vertices[(i + 1) % n]
+        #             line = [self.vertices[v0], self.vertices[v2]]
+        #             projection_coords, dist = self._point_edge_projection(vertex, line)
+        #             # projection_point = Point(projection_coords)
+        #             # if pol.contains(projection_point):  # it is not convex
+        #             #     # projection_vector = [0,0]
+        #             #     # projection_vector[0] = projection_point.coords[0][0] - point[0]
+        #             #     # projection_vector[1] = projection_point.coords[0][1] - point[1]
+        #             self.vertices[i] = projection_coords
+        #         self.plot_graph(pause=0.1)

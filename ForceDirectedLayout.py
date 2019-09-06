@@ -293,9 +293,6 @@ class ForceDirectedLayout:
             if self.graph.count_edge_crossings() > 0:  # if the movement adds a crossing ==> revert
                 self.graph.vertices[v][0] -= shiftx
                 self.graph.vertices[v][1] -= shifty
-        self.graph.project_boundary_to_circumcircle()
-        if self.graph.plot:
-            self.graph.plot_graph()
 
     # def _point_edge_projection(v, e):
     #     r"""
@@ -326,6 +323,8 @@ class ForceDirectedLayout:
             #     print("Finished")
             #     break
             set_of_vertices = range(len(self.graph.vertices))
+            # Step 0 Project boundary to circumcircle
+            self.graph.project_boundary_to_circumcircle()
             # Step 1
             forces = self._forces_calculation(set_of_vertices, q_tree)
             # Step 2
@@ -335,6 +334,9 @@ class ForceDirectedLayout:
             # crossings = self.graph.count_edge_crossings()
             # if crossings > 0:
             #     break
+            # Plot
+            if self.graph.plot:
+                self.graph.plot_graph()
             print("Iter: " + str(it) + "; Crossings: " + str(self.graph.count_edge_crossings()) + \
                   "; Regions: " + str(len(self.graph.regions)))
 
