@@ -399,16 +399,16 @@ class Graph:
             self.vertices[i][0] -= center[0]
             self.vertices[i][1] -= center[1]
 
-    # def normalize_graph(self, max=[]):
-    #     if not max:
-    #         max = 1
-    #     norm = 0.0
-    #     for v in self.vertices:
-    #         module = math.sqrt(v[0]**2+v[1]**2)
-    #         norm = module if module > norm else norm
-    #     for i in range(len(self.vertices)):
-    #         self.vertices[i][0] /= norm/max
-    #         self.vertices[i][1] /= norm/max
+    def normalize_graph(self, max=[]):
+        if not max:
+            max = 1
+        norm = 0.0
+        for v in self.vertices:
+            module = math.sqrt(v[0]**2+v[1]**2)
+            norm = module if module > norm else norm
+        for i in range(len(self.vertices)):
+            self.vertices[i][0] /= norm/max
+            self.vertices[i][1] /= norm/max
 
     def project_boundary_to_circumcircle(self):
         boundary_vertices = self.get_boundary_vertices(clockwise=True)
@@ -444,8 +444,8 @@ class Graph:
             self.vertices[i] = [radius*math.cos(angle), radius*math.sin(angle)]
         # normalize all vertices to the circumference of radius 100
         for i in range(len(self.vertices)):
-            self.vertices[i][0] /= radius/1000  # normalized in the range [0, 1000]
-            self.vertices[i][1] /= radius/1000  # normalized in the range [0, 1000]
+            self.vertices[i][0] /= radius/100  # normalized in the range [0, 100]
+            self.vertices[i][1] /= radius/100  # normalized in the range [0, 100]
         #######
         # for v in boundary_vertices:
         #     self.vertices[v] = new_vertices.pop()
@@ -456,6 +456,7 @@ class Graph:
         # ax.add_artist(c)
 
     def make_convex_boundary(self):
+        self.normalize_graph(100)
         boundary_vertices = self.get_boundary_vertices(clockwise=False)
         n = len(boundary_vertices)
         count = 0
