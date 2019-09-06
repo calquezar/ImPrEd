@@ -11,7 +11,7 @@ from ForceDirectedLayout import ForceDirectedLayout
 delta = 10
 gamma = 1
 theta = 0.1
-case = 0
+case = 6
 if case == 0:
     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
                        [2, 1], [2, 2], [-5, 5], [5, 5], [5, -5], [-5, -5]])
@@ -66,7 +66,11 @@ elif case == 5:
          [0.0001, 0.0002]])
     points = addLimitPoints(points)
     vor = Voronoi(points)
-
+elif case == 6:
+    np.random.seed(10)
+    points = np.random.random((200, 2))
+    points = addLimitPoints(points)
+    vor = Voronoi(points)
 # voronoi_plot_2d(vor)
 #####################################################################
 # Main algorithm

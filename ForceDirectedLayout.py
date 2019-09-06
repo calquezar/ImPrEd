@@ -314,6 +314,7 @@ class ForceDirectedLayout:
         r"""
             Return the lowest displacements for each direction
         """
+        self.graph.make_convex_boundary()
         for it in range(self.maxIter):
             q_tree = QuadTree(QT.arrayToList(self.graph.vertices))
             # q_tree.plot()
@@ -336,7 +337,7 @@ class ForceDirectedLayout:
             #     break
             # Plot
             if self.graph.plot:
-                self.graph.plot_graph()
+                self.graph.plot_graph(0.01)
             print("Iter: " + str(it) + "; Crossings: " + str(self.graph.count_edge_crossings()) + \
                   "; Regions: " + str(len(self.graph.regions)))
 

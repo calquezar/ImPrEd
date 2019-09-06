@@ -71,7 +71,6 @@ class Graph:
         self.regions = [copy.deepcopy(x) for x in self.regions if x]  # remove empty list
         self.sort_all_regions(clockwise)
         self.plot = False
-        self.make_convex_boundary()
 
     def copy(self):
         return copy.deepcopy(self)
@@ -445,8 +444,8 @@ class Graph:
             self.vertices[i] = [radius*math.cos(angle), radius*math.sin(angle)]
         # normalize all vertices to the circumference of radius 100
         for i in range(len(self.vertices)):
-            self.vertices[i][0] /= radius/100  # normalized in the range [0, 100]
-            self.vertices[i][1] /= radius/100  # normalized in the range [0, 100]
+            self.vertices[i][0] /= radius/1000  # normalized in the range [0, 1000]
+            self.vertices[i][1] /= radius/1000  # normalized in the range [0, 1000]
         #######
         # for v in boundary_vertices:
         #     self.vertices[v] = new_vertices.pop()
@@ -462,27 +461,27 @@ class Graph:
         count = 0
         while count < n:
             for i in range(len(boundary_vertices)):
-                plt.cla()
-                for b in boundary_vertices:
-                    plt.scatter(self.vertices[b][0], self.vertices[b][1])
-                # plt.pause(1)
+                if self.plot:
+                    plt.cla()
+                    for b in boundary_vertices:
+                        plt.scatter(self.vertices[b][0], self.vertices[b][1])
+                    # plt.pause(1)
                 points = [self.vertices[v] for v in boundary_vertices if v != boundary_vertices[i]]
                 pol = Polygon(points)
-                x, y = pol.exterior.xy
+                # x, y = pol.exterior.xy
                 # plt.plot(x, y)
                 vertex = Point(self.vertices[boundary_vertices[i]])
                 if pol.contains(vertex):  # it is not convex
                     count = 0
                     vertex = boundary_vertices[i]
-                    # print("Está dentro" + str(i))
                     v0 = boundary_vertices[(i - 1) % n]
                     v2 = boundary_vertices[(i + 1) % n]
                     # we apply the cosine theorem to calculte the angle v0-vertex-v2
                     a = LineString([self.vertices[v0], self.vertices[vertex]])
                     b = LineString([self.vertices[vertex], self.vertices[v2]])
                     c = LineString([self.vertices[v2], self.vertices[v0]])
-                    cosAngle = (c.length**2-a.length**2-b.length**2)/(-2*a.length*b.length)
-                    angle = math.acos(cosAngle)
+                    cos_angle = (c.length**2-a.length**2-b.length**2)/(-2*a.length*b.length)
+                    angle = math.acos(cos_angle)
                     # now we calculate the bisector
                     vx = self.vertices[v0][0] - self.vertices[vertex][0]
                     vy = self.vertices[v0][1] - self.vertices[vertex][1]
@@ -491,7 +490,8 @@ class Graph:
                     self.vertices[vertex][1] += 10*math.sin(bisector_angle)
                 else:
                     count += 1
-                self.plot_graph(0.5)
+                if self.plot:
+                    self.plot_graph(0.01)
 
         # n = len(boundary_vertices)
         # for it in range(1):

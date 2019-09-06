@@ -4,8 +4,15 @@ from scipy.spatial import Voronoi, voronoi_plot_2d
 from Graph import Graph, addLimitPoints
 import time
 
-points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
-                   [2, 1], [2, 2]])
+np.random.seed(10)
+case = 1
+if case == 0:
+    points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
+                       [2, 1], [2, 2]])
+elif case == 1: # with 20,2 we found problems
+    points = np.random.random((20, 2))
+
+
 points = addLimitPoints(points)
 vor = Voronoi(points)
 g = Graph(vor)
@@ -71,6 +78,11 @@ def find_path(g, edge, vertex_ending, source_path=[], clockwise=False):
     """
     regions = g.get_regions_by_edge(edge)
     if regions:
+        plt.cla()
+        g.plot_graph()
+        g.colour_edge(edge)
+        plt.pause(0.5)
+
         region = regions[0]  # only one region because the edge is on the boundary of the graph
         index0 = region.index(edge[0])
         index1 = region.index(edge[1])
