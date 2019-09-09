@@ -68,7 +68,7 @@ elif case == 5:
     vor = Voronoi(points)
 elif case == 6:
     np.random.seed(10)
-    points = np.random.random((200, 2))
+    points = np.random.random((40, 2))*200
     points = addLimitPoints(points)
     vor = Voronoi(points)
 # voronoi_plot_2d(vor)

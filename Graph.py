@@ -29,6 +29,7 @@ from shapely.geometry import LineString, Point, Polygon
 from shapely.geometry.polygon import LinearRing
 from descartes.patch import PolygonPatch
 import statistics
+from types import SimpleNamespace
 
 class SurroundingInfo:
     def __init__(self, v, e, c):
@@ -89,25 +90,38 @@ class Graph:
         """
         return abs(math.log(self.area(region)))
 
-    def count_edge_crossings(self):
+    def count_edge_crossings(self, only_boundary=False):
         r"""
             Return the number of crossings in the graph
         """
         crossings = 0
-        for e1 in range(len(self.edges)-1):
-            for e2 in range(e1+1, len(self.edges)):
-                edge1 = LineString([self.vertices[self.edges[e1][0]], self.vertices[self.edges[e1][1]]])
-                edge2 = LineString([self.vertices[self.edges[e2][0]], self.vertices[self.edges[e2][1]]])
-                if edge1.crosses(edge2):
-                    crossings += 1
-                    # print(self.edges[e1],self.edges[e2])
+        if only_boundary:
+            g = self.get_boundary_graph(self)
+            return g.count_edge_crossings()
+        else:
+            for e1 in range(len(self.edges)-1):
+                for e2 in range(e1+1, len(self.edges)):
+                    edge1 = LineString([self.vertices[self.edges[e1][0]], self.vertices[self.edges[e1][1]]])
+                    edge2 = LineString([self.vertices[self.edges[e2][0]], self.vertices[self.edges[e2][1]]])
+                    if edge1.crosses(edge2):
+                        crossings += 1
+                        # print(self.edges[e1],self.edges[e2])
         return crossings
-
     def _dist(self, v1, v2):
         r"""
             Return the euclidean distance between vertices v1 and v2.
         """
         return math.sqrt((v1[0] - v2[0]) ** 2 + (v1[1] - v2[1]) ** 2)
+
+    def get_boundary_graph(self):
+
+        vertices = self.get_boundary_vertices()
+        edges = self.get_boundary_edges()
+        regions = [vertices]
+        data = SimpleNamespace(vertices=vertices,\
+                               ridge_vertices=edges,
+                               regions=regions)
+        return Graph(data)
 
     def get_boundary_rect(self):
         
@@ -462,10 +476,10 @@ class Graph:
         count = 0
         while count < n:
             for i in range(len(boundary_vertices)):
-                if self.plot:
-                    plt.cla()
-                    for b in boundary_vertices:
-                        plt.scatter(self.vertices[b][0], self.vertices[b][1])
+                # if self.plot:
+                #     plt.cla()
+                #     for b in boundary_vertices:
+                #         plt.scatter(self.vertices[b][0], self.vertices[b][1])
                     # plt.pause(1)
                 points = [self.vertices[v] for v in boundary_vertices if v != boundary_vertices[i]]
                 pol = Polygon(points)
@@ -481,14 +495,25 @@ class Graph:
                     a = LineString([self.vertices[v0], self.vertices[vertex]])
                     b = LineString([self.vertices[vertex], self.vertices[v2]])
                     c = LineString([self.vertices[v2], self.vertices[v0]])
-                    cos_angle = (c.length**2-a.length**2-b.length**2)/(-2*a.length*b.length)
+                    cos_angle = (c.length**2-a.length**2-b.length**2)/(-2*a.length*b.length) # cosine theorem
                     angle = math.acos(cos_angle)
                     # now we calculate the bisector
                     vx = self.vertices[v0][0] - self.vertices[vertex][0]
                     vy = self.vertices[v0][1] - self.vertices[vertex][1]
                     bisector_angle = math.atan2(vy, vx) + angle/2
-                    self.vertices[vertex][0] += 10*math.cos(bisector_angle)
-                    self.vertices[vertex][1] += 10*math.sin(bisector_angle)
+                    shiftx = 10*math.cos(bisector_angle)
+                    shifty = 10*math.sin(bisector_angle)
+                    self.vertices[vertex][0] += shiftx
+                    self.vertices[vertex][1] += shifty
+                    while self.count_edge_crossings(only_boundary=True) > 0:
+                        # revert
+                        self.vertices[vertex][0] -= shiftx
+                        self.vertices[vertex][1] -= shifty
+                        # try with the half of the step
+                        shiftx /= 2
+                        shifty /= 2
+                        self.vertices[vertex][0] += shiftx
+                        self.vertices[vertex][1] += shifty
                 else:
                     count += 1
                 if self.plot:
