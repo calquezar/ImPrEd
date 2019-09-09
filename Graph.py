@@ -96,7 +96,7 @@ class Graph:
         """
         crossings = 0
         if only_boundary:
-            g = self.get_boundary_graph(self)
+            g = self.get_boundary_graph()
             return g.count_edge_crossings()
         else:
             for e1 in range(len(self.edges)-1):
@@ -115,9 +115,9 @@ class Graph:
 
     def get_boundary_graph(self):
 
-        vertices = self.get_boundary_vertices()
+        vertices = self.vertices
         edges = self.get_boundary_edges()
-        regions = [vertices]
+        regions = [self.get_boundary_vertices()]
         data = SimpleNamespace(vertices=vertices,\
                                ridge_vertices=edges,
                                regions=regions)
