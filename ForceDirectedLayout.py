@@ -287,7 +287,7 @@ class ForceDirectedLayout:
         r"""
             Move nodes taking into account forces and maximum displacements
         """
-        self.graph.plot_graph(pause=0.01)
+        # self.graph.plot_graph(pause=0.01)
         for i in range(len(set_of_vertices)):
             v = set_of_vertices[i]
             # if v not in self.graph.get_boundary_vertices():

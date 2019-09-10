@@ -75,12 +75,21 @@ elif case == 6:
 #####################################################################
 # Main algorithm
 g = Graph(vor)
-g.plot = True
-g.plot_graph()
+g.plot = False
+# g.plot_graph()
 # Force algorithm
 maxIter = 10
 tol = 0.2
 # figManager = plt.get_current_fig_manager()
 # figManager.window.showMaximized()
 f = ForceDirectedLayout(g, delta, gamma, theta, maxIter)
-f.run(tol)
+# f.run(tol)
+
+# %prun -s file -s time -s cumulative -T "prun_salida.txt" f.run(tol)
+import cProfile
+cProfile.run('f.run(tol)','restats')
+
+import pstats
+from pstats import SortKey
+p = pstats.Stats('restats')
+p.strip_dirs().sort_stats(-1).print_stats()
