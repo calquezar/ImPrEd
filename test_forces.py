@@ -68,7 +68,7 @@ elif case == 5:
     vor = Voronoi(points)
 elif case == 6:
     np.random.seed(10)
-    points = np.random.random((10, 2))*200
+    points = np.random.random((10, 2))
     points = addLimitPoints(points)
     vor = Voronoi(points)
 # voronoi_plot_2d(vor)
@@ -76,9 +76,9 @@ elif case == 6:
 # Main algorithm
 g = Graph(vor)
 g.plot = True
-# g.plot_graph()
+g.plot_graph()
 # Force algorithm
-maxIter = 100
+maxIter = 10
 tol = 0.2
 # figManager = plt.get_current_fig_manager()
 # figManager.window.showMaximized()

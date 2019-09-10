@@ -43,19 +43,20 @@ def addLimitPoints(points):
         Add points in order to close voronoi diagram
     """
     means = np.mean(points, axis=0)
-    mins = np.min(points, axis=0)
-    maxs = np.max(points, axis=0)
-    beta = 2
+    min = np.min(points)
+    max = np.max(points)
+    alpha = np.max([np.abs(min), np.abs(max)])
+    beta = 3
 
-    # points = np.append(points, [means[0], beta*np.abs(maxs[1])]) # top
-    # points = np.append(points, [means[0], -beta*abs(mins[1])]) # bottom
-    # points = np.append(points, [-beta*abs(mins[0]), means[1]]) # left
-    # points = np.append(points, [beta*abs(maxs[0]), means[1]]) # right
+    points = np.append(points, [means[0], beta*alpha]) # top
+    points = np.append(points, [means[0], -beta*alpha]) # bottom
+    points = np.append(points, [-beta*alpha, means[1]]) # left
+    points = np.append(points, [beta*alpha, means[1]]) # right
     
-    points = np.append(points, [-beta*abs(mins[0]+1), beta*np.abs(maxs[1]+1)]) # top-left
-    points = np.append(points, [-beta*abs(mins[0]+1), -beta*abs(mins[1]+1)]) # bottom-left
-    points = np.append(points, [beta*abs(maxs[0]+1),beta*np.abs(maxs[1]+1)]) # top-right
-    points = np.append(points, [beta*abs(maxs[0]+1), -beta*abs(mins[1]+1)]) # bottom-right
+    # points = np.append(points, [-beta*abs(mins[0]+1), beta*np.abs(maxs[1]+1)]) # top-left
+    # points = np.append(points, [-beta*abs(mins[0]+1), -beta*abs(mins[1]+1)]) # bottom-left
+    # points = np.append(points, [beta*abs(maxs[0]+1),beta*np.abs(maxs[1]+1)]) # top-right
+    # points = np.append(points, [beta*abs(maxs[0]+1), -beta*abs(mins[1]+1)]) # bottom-right
     L = int(points.size)
     points = points.reshape(int(L/2), 2)
     return points
@@ -402,12 +403,16 @@ class Graph:
     #                 new_coords = projection
     #         self.vertices[v] = new_coords
 
+    def get_center_of_the_graph(self):
+        center = [0, 0]
+        for v in self.vertices:
+            center[0] += v[0]/len(self.vertices)
+            center[1] += v[1]/len(self.vertices)
+        return center
+
     def center_graph(self, center=[]):
         if not center:  # By default, the graph is centered using the centroid
-            center = [0, 0]
-            for v in self.vertices:
-                center[0] += v[0]/len(self.vertices)
-                center[1] += v[1]/len(self.vertices)
+            center = self.get_center_of_the_graph()
         # center the graph to the origin
         for i in range(len(self.vertices)):
             self.vertices[i][0] -= center[0]
@@ -505,15 +510,15 @@ class Graph:
                     shifty = 10*math.sin(bisector_angle)
                     self.vertices[vertex][0] += shiftx
                     self.vertices[vertex][1] += shifty
-                    while self.count_edge_crossings(only_boundary=True) > 0:
-                        # revert
-                        self.vertices[vertex][0] -= shiftx
-                        self.vertices[vertex][1] -= shifty
-                        # try with the half of the step
-                        shiftx /= 2
-                        shifty /= 2
-                        self.vertices[vertex][0] += shiftx
-                        self.vertices[vertex][1] += shifty
+                    # while self.count_edge_crossings(only_boundary=True) > 0:
+                    #     # revert
+                    #     self.vertices[vertex][0] -= shiftx
+                    #     self.vertices[vertex][1] -= shifty
+                    #     # try with the half of the step
+                    #     shiftx /= 2
+                    #     shifty /= 2
+                    #     self.vertices[vertex][0] += shiftx
+                    #     self.vertices[vertex][1] += shifty
                 else:
                     count += 1
                 if self.plot:

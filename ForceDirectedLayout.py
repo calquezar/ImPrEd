@@ -34,7 +34,7 @@ import math
 import QuadTree as QT
 from QuadTree import QPoint, QuadTree
 from Graph import SurroundingInfo
-
+from matplotlib import pyplot as plt
 
 class ForceDirectedLayout:
 
@@ -171,22 +171,32 @@ class ForceDirectedLayout:
             # print(fr,fe,fa,fb)
             # calculation of total force
             total_force = [0, 0]
-            total_force[0] = 2 * fa[0] + fr[0] + fe[0] + fb[0]
-            total_force[1] = 2 * fa[1] + fr[1] + fe[1] + fb[1]
+            a = 2
+            r = 10
+            e = 10
+            b = 0
+            total_force[0] = a * fa[0] + r * fr[0] + e * fe[0] + b * fb[0]
+            total_force[1] = a * fa[1] + r * fr[1] + e * fe[1] + b * fb[1]
             forces.append(total_force)
         return forces
 
     def _boundary_attraction(self, v):
-
-        boundary_rect = self.graph.get_boundary_rect()
         force = [0.0, 0.0]
-        for i in range(4):
-            edge = [boundary_rect[i], boundary_rect[(i + 1) % 4]]
-            ve, dist = self.graph._point_edge_projection(v, edge)
-            f = self._node_node_attraction(v, ve)
-            force[0] += f[0]
-            force[1] += f[1]
-        return force
+        center = self.graph.get_center_of_the_graph()
+        # calculation of the radius of the circumcicle
+        radius = 0
+        for i in self.graph.get_boundary_vertices():
+            vertex = self.graph.vertices[i]
+            dist = self._dist(vertex, center)
+            radius = dist if dist > radius else radius
+        vectorx = v[0] - center[0]
+        vectory = v[1] - center[1]
+        module = math.sqrt(vectorx**2+vectory**2)
+        force = radius**2-module**2
+        angle = math.atan2(vectory, vectorx)
+        forcex = force*math.cos(angle)
+        forcey = force*math.sin(angle)
+        return [forcex, forcey]
 
     def _node_edge_repulsion(self, v, ve):
         r"""
@@ -277,6 +287,7 @@ class ForceDirectedLayout:
         r"""
             Move nodes taking into account forces and maximum displacements
         """
+        self.graph.plot_graph(pause=0.01)
         for i in range(len(set_of_vertices)):
             v = set_of_vertices[i]
             # if v not in self.graph.get_boundary_vertices():
@@ -293,6 +304,14 @@ class ForceDirectedLayout:
             if self.graph.count_edge_crossings() > 0:  # if the movement adds a crossing ==> revert
                 self.graph.vertices[v][0] -= shiftx
                 self.graph.vertices[v][1] -= shifty
+            else:
+                None
+                # fx = max_displacement*math.cos(force_direction)*self.theta
+                # fy = max_displacement*math.sin(force_direction)*self.theta
+                # plt.arrow(self.graph.vertices[v][0] - shiftx,self.graph.vertices[v][1] - shifty, \
+                #             fx, fy, width=0.1)
+                # plt.pause(0.2)
+
 
     # def _point_edge_projection(v, e):
     #     r"""
@@ -314,7 +333,7 @@ class ForceDirectedLayout:
         r"""
             Return the lowest displacements for each direction
         """
-        self.graph.make_convex_boundary()
+        # self.graph.make_convex_boundary()
         for it in range(self.maxIter):
             q_tree = QuadTree(QT.arrayToList(self.graph.vertices))
             # q_tree.plot()
@@ -325,7 +344,7 @@ class ForceDirectedLayout:
             #     break
             set_of_vertices = range(len(self.graph.vertices))
             # Step 0 Project boundary to circumcircle
-            self.graph.project_boundary_to_circumcircle()
+            # self.graph.project_boundary_to_circumcircle()
             # Step 1
             forces = self._forces_calculation(set_of_vertices, q_tree)
             # Step 2
