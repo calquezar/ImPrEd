@@ -330,6 +330,7 @@ class ForceDirectedLayout:
     #     return ve
 
     def run(self, tol=1):
+        histGraphs = []
         r"""
             Return the lowest displacements for each direction
         """
@@ -359,6 +360,10 @@ class ForceDirectedLayout:
                 self.graph.plot_graph(0.01)
             print("Iter: " + str(it) + "; Crossings: " + str(self.graph.count_edge_crossings()) + \
                   "; Regions: " + str(len(self.graph.regions)))
+            # save current graph
+            histGraphs.append(self.graph.copy())
+        return histGraphs
+
 
     def _select_region(self, graph, tol=1):
         r"""

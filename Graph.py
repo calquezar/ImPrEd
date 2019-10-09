@@ -297,7 +297,8 @@ class Graph:
         # now follow the boundary of the region
         next_vertex = e[1]
         next_edge = self.get_consecutive_edge(e, next_vertex, edges)
-        while next_vertex != new_ordering[0]:
+        #while next_vertex != new_ordering[0]:
+        while next_vertex not in new_ordering:
             # add new vertex to list
             new_ordering.append(next_vertex)
             # get the other ending of the edge
