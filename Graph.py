@@ -543,3 +543,13 @@ class Graph:
         #             #     # projection_vector[1] = projection_point.coords[0][1] - point[1]
         #             self.vertices[i] = projection_coords
         #         self.plot_graph(pause=0.1)
+
+
+    # def get_region_by_vertex(self, vertex):
+    #
+    #     for r in self.regions:
+    #         points = []
+    #         for v in r:
+    #             points.append(self.vertices[v]
+    #         polygon = Polygon(points)
+    #         point = Point(self.vertices[boundary_vertices[i]])

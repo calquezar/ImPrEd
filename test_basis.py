@@ -93,6 +93,8 @@ def find_path(g, edge, vertex_ending, source_path=[], clockwise=False):
         else:
             shift = index0 if index0 < index1 else index1
         region = np.roll(region, -shift).tolist()
+        # region = region[shift:]+region[:shift]
+
         # g.plot_graph()
         # for e in source_path:
         #     g.colour_edge(e)

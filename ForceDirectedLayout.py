@@ -38,11 +38,12 @@ from matplotlib import pyplot as plt
 
 class ForceDirectedLayout:
 
-    def __init__(self, graph, delta=1, gamma=1, theta=1, maxIter=20):
+    def __init__(self, graph, beta=1, delta=1, gamma=1, theta=1, maxIter=20):
         r"""
             Constructor
         """
         self.graph = graph
+        self.beta = beta
         self.delta = delta
         self.gamma = gamma
         self.theta = theta
@@ -206,9 +207,11 @@ class ForceDirectedLayout:
         if d > 0:
             fx = 0
             fy = 0
-            if d < self.gamma:
-                fx = (((self.gamma - d) ** 2) / d) * (v[0] - ve[0])
-                fy = (((self.gamma - d) ** 2) / d) * (v[1] - ve[1])
+            # if d < self.gamma:
+            fx = (self.gamma/ d**2) * (v[0] - ve[0])
+            fy = (self.gamma/ d**2) * (v[1] - ve[1])
+                # fx = (((self.gamma - d) ** 2) / d) * (v[0] - ve[0])
+                # fy = (((self.gamma - d) ** 2) / d) * (v[1] - ve[1])
             return [fx, fy]
         else:
             epsilon = np.finfo(np.float32).eps
@@ -219,8 +222,8 @@ class ForceDirectedLayout:
             Return the attraction force between vertices v1 and v2.
         """
         d = self._dist(v1, v2)
-        fx = (d / self.delta) * (v2[0] - v1[0])
-        fy = (d / self.delta) * (v2[1] - v1[1])
+        fx = (d / self.beta) * (v2[0] - v1[0])
+        fy = (d / self.beta) * (v2[1] - v1[1])
         return [fx, fy]
 
     def _node_node_repulsion(self, v1, v2):

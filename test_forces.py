@@ -12,10 +12,11 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 #####################################################################
+beta = 10
 delta = 10
-gamma = 1
-theta = 0.1
-case = 7
+gamma = 10
+theta = 0.05
+case = 5
 if case == 0:
     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
                        [2, 1], [2, 2], [-5, 5], [5, 5], [5, -5], [-5, -5]])
@@ -89,7 +90,7 @@ elif case == 8:
 #####################################################################
 # Main algorithm
 g = Graph(vor)
-g.plot = False
+g.plot = True
 #g.plot_graph(1)
 #g.project_boundary_to_circumcircle()
 #g.plot_graph()
@@ -98,7 +99,7 @@ maxIter = 100
 tol = 0.2
 # figManager = plt.get_current_fig_manager()
 # figManager.window.showMaximized()
-f = ForceDirectedLayout(g, delta, gamma, theta, maxIter)
+f = ForceDirectedLayout(g, beta, delta, gamma, theta, maxIter)
 # histGraphs = f.run(tol)
 
 # %prun -s file -s time -s cumulative -T "prun_salida.txt" f.run(tol)
