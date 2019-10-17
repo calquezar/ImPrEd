@@ -16,7 +16,7 @@ beta = 10
 delta = 10
 gamma = 10
 theta = 0.05
-case = 5
+case = 6
 if case == 0:
     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
                        [2, 1], [2, 2], [-5, 5], [5, 5], [5, -5], [-5, -5]])
@@ -73,7 +73,7 @@ elif case == 5:
     vor = Voronoi(points)
 elif case == 6:
     np.random.seed(10)
-    points = np.random.random((10, 2))
+    points = np.random.random((100, 2))
     points = addLimitPoints(points)
     vor = Voronoi(points)
 elif case == 7: # Enrique
@@ -90,7 +90,7 @@ elif case == 8:
 #####################################################################
 # Main algorithm
 g = Graph(vor)
-g.plot = True
+g.plot = False
 #g.plot_graph(1)
 #g.project_boundary_to_circumcircle()
 #g.plot_graph()
@@ -101,17 +101,17 @@ tol = 0.2
 # figManager.window.showMaximized()
 f = ForceDirectedLayout(g, beta, delta, gamma, theta, maxIter)
 # histGraphs = f.run(tol)
-
+###################################################################################
 # %prun -s file -s time -s cumulative -T "prun_salida.txt" f.run(tol)
 # %prun -s module -s time -s cumulative -T "prun_output.txt" f.run(tol)
 
-import cProfile
-cProfile.run('f.run(tol)','restats')
-
-import pstats
-# from pstats import SortKey
-p = pstats.Stats('restats')
-p.strip_dirs().sort_stats(-1).print_stats()
+# import cProfile
+# cProfile.run('f.run(tol)','restats')
+#
+# import pstats
+# # from pstats import SortKey
+# p = pstats.Stats('restats')
+# p.strip_dirs().sort_stats(-1).print_stats()
 
 ####################################################################################
 
@@ -123,3 +123,45 @@ p.strip_dirs().sort_stats(-1).print_stats()
 #     # animating over 10 frames, with an interval of 200ms between frames.
 #     anim = FuncAnimation(plt.figure(), update, frames=np.arange(0, maxIter), interval=200, repeat=False)
 #     anim.save('graph.gif', dpi=80, writer='imagemagick')
+
+
+########################################################################################
+# de aquí en adelante es otro script
+###################################################################################
+import time
+
+
+beta = 10
+delta = 10
+gamma = 10
+theta = 0.05
+sizes = []
+times_not_opt = []
+times_opt = []
+hist_graphs = []
+for i in range(10, 40, 5):
+    sizes.append(i)
+    np.random.seed(10)
+    points = np.random.random((i, 2))
+    points = addLimitPoints(points)
+    vor = Voronoi(points)
+    g = Graph(vor)
+    g.plot = False
+    # Force algorithm
+    maxIter = 200
+    tol = 0.2
+    # not opt
+    f = ForceDirectedLayout(g, beta, delta, gamma, theta, maxIter, opt=False)
+    start = time.time()
+    f.run()
+    end = time.time()
+    times_not_opt.append(end-start)
+    # opt
+    f = ForceDirectedLayout(g, beta, delta, gamma, theta, maxIter, opt=True)
+    start = time.time()
+    f.run()
+    end = time.time()
+    times_opt.append(end-start)
+    hist_graphs.append(g)
+plt.plot(sizes, times_not_opt)
+plt.plot(sizes, times_opt)
