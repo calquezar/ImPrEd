@@ -72,6 +72,7 @@ class Graph:
         self.regions = [copy.deepcopy(x) for x in vor.regions if -1 not in x]
         self.regions = [copy.deepcopy(x) for x in self.regions if x]  # remove empty list
         self.sort_all_regions(clockwise)
+        self.boundary = self.get_boundary_vertices(clockwise)
         self.plot = False
 
     def copy(self):
@@ -91,6 +92,11 @@ class Graph:
         """
         return abs(math.log(self.area(region)))
 
+    def check_edge_crossing(self, e1, e2):
+        edge1 = LineString([self.vertices[e1[0]], self.vertices[e1[1]]])
+        edge2 = LineString([self.vertices[e2[0]], self.vertices[e2[1]]])
+        return edge1.crosses(edge2)
+
     def count_edge_crossings(self, only_boundary=False):
         r"""
             Return the number of crossings in the graph
@@ -102,12 +108,13 @@ class Graph:
         else:
             for e1 in range(len(self.edges)-1):
                 for e2 in range(e1+1, len(self.edges)):
-                    edge1 = LineString([self.vertices[self.edges[e1][0]], self.vertices[self.edges[e1][1]]])
-                    edge2 = LineString([self.vertices[self.edges[e2][0]], self.vertices[self.edges[e2][1]]])
-                    if edge1.crosses(edge2):
+                    edge1 = self.edges[e1]
+                    edge2 = self.edges[e2]
+                    if self.check_edge_crossing(edge1, edge2):
                         crossings += 1
-                        # print(self.edges[e1],self.edges[e2])
         return crossings
+
+
     def _dist(self, v1, v2):
         r"""
             Return the euclidean distance between vertices v1 and v2.
@@ -362,10 +369,12 @@ class Graph:
             y = [v0[1], v1[1]]
             plt.plot(x, y, color='k')
         axes = plt.gca()
-        vmin = np.amin(self.vertices)
-        vmax = np.amax(self.vertices)
-        axes.set_xlim([vmin - 0.1, vmax + 0.1])
-        axes.set_ylim([vmin - 0.1, vmax + 0.1])
+        xmin = np.amin(self.vertices[:, 0])
+        xmax = np.amax(self.vertices[:, 0])
+        ymin = np.amin(self.vertices[:, 1])
+        ymax = np.amax(self.vertices[:, 1])
+        axes.set_xlim([xmin, xmax])
+        axes.set_ylim([ymin, ymax])
         plt.pause(pause)
 
 ##############################################################################################

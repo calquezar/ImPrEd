@@ -109,8 +109,7 @@ class ForceDirectedLayout:
             boundary = []
             for v1 in range(len(faces) - 1):
                 for v2 in range(v1 + 1, len(faces)):
-                    if [faces[v1], faces[
-                        v2]] in self.graph.edges:  # asumo las aristas se dan con los vertices ordenados de menor a mayor
+                    if [faces[v1], faces[v2]] in self.graph.edges:  # asumo las aristas se dan con los vertices ordenados de menor a mayor
                         boundary.append([faces[v1], faces[v2]])
             surroundings.append(SurroundingInfo(faces, boundary, connected_to))
         return surroundings
@@ -155,9 +154,11 @@ class ForceDirectedLayout:
                 fa[0] += f[0]
                 fa[1] += f[1]
             # repulsion between neighbour nodes
-            neighbours = q_tree.findPoints(QPoint(v[0], v[1]), self.delta)
+            # neighbours = q_tree.findPoints(QPoint(v[0], v[1]), self.delta)
+            neighbours = [self.graph.vertices[w] for w in range(len(self.graph.vertices)) if w != i]
+            # neighbours = [self.graph.vertices[w] for w in self.surroundings[i].vertices]
             for n in neighbours:
-                f = self._node_node_repulsion(v, n.toArray())
+                f = self._node_node_repulsion(v, n)
                 fr[0] += f[0]
                 fr[1] += f[1]
             # repulsion with surrounding edges
@@ -284,7 +285,7 @@ class ForceDirectedLayout:
                     epsilon = np.finfo(np.float32).eps
                     sigma = 1 / epsilon
             else:
-                sigma = 20  # theoretically infinit
+                sigma = 1  # theoretically infinit
             safe_displacements.append(vector_to_edge * sigma / 2)
         return safe_displacements
 
@@ -302,7 +303,6 @@ class ForceDirectedLayout:
             force_amplitude = math.sqrt(forces[i][0] ** 2 + forces[i][1] ** 2)
             max_displacement = safe_areas[i][sector]
             shift = force_amplitude if abs(force_amplitude) < abs(max_displacement) else max_displacement
-
             shiftx = shift * math.cos(force_direction)*self.theta
             shifty = shift * math.sin(force_direction)*self.theta
             ########################################################################################
@@ -317,8 +317,14 @@ class ForceDirectedLayout:
                 new_coords = [0, 0]
                 new_coords[0] = self.graph.vertices[v][0] + shiftx
                 new_coords[1] = self.graph.vertices[v][1] + shifty
-                if not self.checkCrossings(v, new_coords): # no crossings
+                crossings_found = self.check_crossings(v, new_coords)
+                if not crossings_found: # no crossings
                     self.graph.vertices[v] = new_coords
+                    # print("No detecta cruce")
+                else:
+                    # print("Detecta cruce")
+                    None
+
             ########################################################################################
             # else:
             #     None
@@ -352,6 +358,9 @@ class ForceDirectedLayout:
         """
         # self.graph.make_convex_boundary()
         for it in range(self.maxIter):
+            print("Iter: " + str(it))
+            # print("Iter: " + str(it) + "; Crossings: " + str(self.graph.count_edge_crossings()) + \
+            #       "; Regions: " + str(len(self.graph.regions)))
             q_tree = QuadTree(QT.arrayToList(self.graph.vertices))
             # q_tree.plot()
             # region selection in function of relative area
@@ -374,9 +383,10 @@ class ForceDirectedLayout:
             # Plot
             if self.graph.plot:
                 self.graph.plot_graph(0.01)
-            # print("Iter: "+ str(it))
-            # print("Iter: " + str(it) + "; Crossings: " + str(self.graph.count_edge_crossings()) + \
-            #       "; Regions: " + str(len(self.graph.regions)))
+
+            # if self.graph.count_edge_crossings() > 0:
+            #     print("Deberia haber avisado antes")
+            #     break
             # save current graph
             histGraphs.append(self.graph.copy())
         return histGraphs
@@ -410,35 +420,56 @@ class ForceDirectedLayout:
             return old_limits
 
 
-    def checkCrossings(self, v, new_coords):
-        boundary_edges = self.surroundings[v].edges
-        old_coords = self.graph.vertices[v]
+    def check_crossings(self, v, new_coords):
+
         crossing_found = False
-        for third_vertex in self.surroundings[v].connected_to:
-            third_coords = self.graph.vertices[third_vertex]
-            crossing_found = self.checkCrossings_in_boundary(boundary_edges,old_coords, new_coords, third_coords)
-            if crossing_found:
-                break
+        old_coords = self.graph.vertices[v]
+        surrounding_boundary_edges = self.surroundings[v].edges
+        if v in self.graph.boundary:
+            boundary = self.graph.get_boundary_edges()
+            all_edges = boundary + surrounding_boundary_edges
+            for third_vertex in self.surroundings[v].connected_to:
+                connected_edge = [v, third_vertex] if v < third_vertex else [third_vertex, v]
+                while connected_edge in all_edges:
+                    all_edges.remove(connected_edge)
+                third_coords = self.graph.vertices[third_vertex]
+                crossing_found = self.check_crossings_in_surrounding(all_edges, old_coords, new_coords, third_coords)
+                if crossing_found:
+                    return True
+            # for v2 in self.surroundings[v].connected_to:
+            #     edge1 = [v, v2] if v < v2 else [v2, v]
+            #     for edge2 in boundary:
+            #         if self.graph.check_edge_crossing(edge1, edge2):
+            #             return True
+        else:
+            for third_vertex in self.surroundings[v].connected_to:
+                third_coords = self.graph.vertices[third_vertex]
+                crossing_found = self.check_crossings_in_surrounding(surrounding_boundary_edges, old_coords, new_coords, third_coords)
+                if crossing_found:
+                    return True
         return crossing_found
 
-    def checkCrossings_in_boundary(self, boundary_edges, old_coords, new_coords, third_coords):
+    def check_crossings_in_surrounding(self, surrounding_boundary_edges, old_coords, new_coords, third_coords):
         crossing_found = False
-        for edge in boundary_edges:
+        for edge in surrounding_boundary_edges:
             segment1 = LineString([self.graph.vertices[edge[0]], self.graph.vertices[edge[1]]])
             # We have to check all crossings between the edge and the triangle [old, new, third]
             # first check
             segment2 = LineString([old_coords, new_coords])
             if segment1.crosses(segment2):
                 crossing_found = True
+                # print("Break - checkCrossings_in_surrounding 1")
                 break
             # second check
             segment2 = LineString([old_coords, third_coords])
             if segment1.crosses(segment2):
                 crossing_found = True
+                # print("Break - checkCrossings_in_surrounding 2")
                 break
             # third check
             segment2 = LineString([new_coords, third_coords])
             if segment1.crosses(segment2):
                 crossing_found = True
+                # print("Break - checkCrossings_in_surrounding 3")
                 break
         return crossing_found
