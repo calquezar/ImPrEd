@@ -67,7 +67,7 @@ class Graph:
         r"""
             Constructor
         """
-        self.vertices = copy.deepcopy(vor.vertices)
+        self.vertices = np.array(copy.deepcopy(vor.vertices))
         self.edges = [copy.deepcopy(x) for x in vor.ridge_vertices if -1 not in x]
         self.regions = [copy.deepcopy(x) for x in vor.regions if -1 not in x]
         self.regions = [copy.deepcopy(x) for x in self.regions if x]  # remove empty list
@@ -562,3 +562,57 @@ class Graph:
     #             points.append(self.vertices[v]
     #         polygon = Polygon(points)
     #         point = Point(self.vertices[boundary_vertices[i]])
+
+    def check_crossings(self, v, new_coords, surroundings):
+
+        crossing_found = False
+        old_coords = self.vertices[v]
+        surrounding_boundary_edges = surroundings[v].edges
+        if v in self.boundary:
+            boundary = self.get_boundary_edges()
+            all_edges = boundary + surrounding_boundary_edges
+            for third_vertex in surroundings[v].connected_to:
+                connected_edge = [v, third_vertex] if v < third_vertex else [third_vertex, v]
+                while connected_edge in all_edges:
+                    all_edges.remove(connected_edge)
+                third_coords = self.vertices[third_vertex]
+                crossing_found = self.check_crossings_in_surrounding(all_edges, old_coords, new_coords, third_coords)
+                if crossing_found:
+                    return True
+            # for v2 in self.surroundings[v].connected_to:
+            #     edge1 = [v, v2] if v < v2 else [v2, v]
+            #     for edge2 in boundary:
+            #         if self.check_edge_crossing(edge1, edge2):
+            #             return True
+        else:
+            for third_vertex in surroundings[v].connected_to:
+                third_coords = self.vertices[third_vertex]
+                crossing_found = self.check_crossings_in_surrounding(surrounding_boundary_edges, old_coords, new_coords, third_coords)
+                if crossing_found:
+                    return True
+        return crossing_found
+
+    def check_crossings_in_surrounding(self, surrounding_boundary_edges, old_coords, new_coords, third_coords):
+        crossing_found = False
+        for edge in surrounding_boundary_edges:
+            segment1 = LineString([self.vertices[edge[0]], self.vertices[edge[1]]])
+            # We have to check all crossings between the edge and the triangle [old, new, third]
+            # first check
+            segment2 = LineString([old_coords, new_coords])
+            if segment1.crosses(segment2):
+                crossing_found = True
+                # print("Break - checkCrossings_in_surrounding 1")
+                break
+            # second check
+            segment2 = LineString([old_coords, third_coords])
+            if segment1.crosses(segment2):
+                crossing_found = True
+                # print("Break - checkCrossings_in_surrounding 2")
+                break
+            # third check
+            segment2 = LineString([new_coords, third_coords])
+            if segment1.crosses(segment2):
+                crossing_found = True
+                # print("Break - checkCrossings_in_surrounding 3")
+                break
+        return crossing_found

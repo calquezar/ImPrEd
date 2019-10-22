@@ -31,6 +31,7 @@ AUTHORS:
 
 import numpy as np
 import math
+import copy
 import QuadTree as QT
 from QuadTree import QPoint, QuadTree
 from Graph import SurroundingInfo
@@ -139,14 +140,14 @@ class ForceDirectedLayout:
                 - gamma
         """
         boundary_vertices = self.graph.get_boundary_vertices()
-        forces = []
+        forces = np.empty(0)
         for i in set_of_vertices:
             v = self.graph.vertices[i]
             sv = self.surroundings[i]
-            fa = [0, 0]
-            fr = [0, 0]
-            fe = [0, 0]
-            fb = [0, 0]
+            fa = np.array([0, 0])
+            fr = np.array([0, 0])
+            fe = np.array([0, 0])
+            fb = np.array([0, 0])
             # Attraction between connected nodes
             for vIdx in sv.connected_to:
                 vc = self.graph.vertices[vIdx]
@@ -174,14 +175,15 @@ class ForceDirectedLayout:
             #     fb = self._boundary_attraction(v)
             # print(fr,fe,fa,fb)
             # calculation of total force
-            total_force = [0, 0]
-            a = 2
-            r = 10
-            e = 10
+            total_force = np.array([0, 0])
+            # a = 2, r = 10, e = 10 ,b = 0
+            a = 1
+            r = 1
+            e = 1
             b = 0
             total_force[0] = a * fa[0] + r * fr[0] + e * fe[0] + b * fb[0]
             total_force[1] = a * fa[1] + r * fr[1] + e * fe[1] + b * fb[1]
-            forces.append(total_force)
+            forces = np.append(forces, total_force).reshape(forces.shape[0]+1,2)
         return forces
 
     def _boundary_attraction(self, v):
@@ -289,6 +291,27 @@ class ForceDirectedLayout:
             safe_displacements.append(vector_to_edge * sigma / 2)
         return safe_displacements
 
+    def _move(self, set_of_vertices, forces):
+        r"""
+            Move nodes taking into account forces and maximum displacements
+        """
+        print(forces)
+        self.theta *= 2
+        colissions = True
+        while colissions:
+            colissions = False
+            copy_graph = self.graph.copy()
+            for i in range(len(copy_graph.vertices)):
+                new_coords = copy_graph.vertices[i] + self.theta*forces[i]
+                if copy_graph.check_crossings(i, new_coords, self.surroundings):
+                    self.theta *= 0.5
+                    colissions = True
+                    break
+                else:
+                    copy_graph.vertices[i] += new_coords
+        self.graph = copy_graph
+
+
     def _move_nodes(self, set_of_vertices, forces, safe_areas):
         r"""
             Move nodes taking into account forces and maximum displacements
@@ -317,7 +340,7 @@ class ForceDirectedLayout:
                 new_coords = [0, 0]
                 new_coords[0] = self.graph.vertices[v][0] + shiftx
                 new_coords[1] = self.graph.vertices[v][1] + shifty
-                crossings_found = self.check_crossings(v, new_coords)
+                crossings_found = self.graph.check_crossings(v, new_coords, self.surroundings)
                 if not crossings_found: # no crossings
                     self.graph.vertices[v] = new_coords
                     # print("No detecta cruce")
@@ -376,7 +399,7 @@ class ForceDirectedLayout:
             # Step 2
             safe_displacements = self._calculate_maximum_movements(set_of_vertices)
             # Step 3
-            self._move_nodes(set_of_vertices, forces, safe_displacements)
+            self._move_nodes(set_of_vertices, forces,safe_displacements)
             # crossings = self.graph.count_edge_crossings()
             # if crossings > 0:
             #     break
@@ -418,58 +441,3 @@ class ForceDirectedLayout:
             for i in range(len(old_limits)):
                 old_limits[i] = old_limits[i] if abs(old_limits[i]) < abs(new_limits[i]) else new_limits[i]
             return old_limits
-
-
-    def check_crossings(self, v, new_coords):
-
-        crossing_found = False
-        old_coords = self.graph.vertices[v]
-        surrounding_boundary_edges = self.surroundings[v].edges
-        if v in self.graph.boundary:
-            boundary = self.graph.get_boundary_edges()
-            all_edges = boundary + surrounding_boundary_edges
-            for third_vertex in self.surroundings[v].connected_to:
-                connected_edge = [v, third_vertex] if v < third_vertex else [third_vertex, v]
-                while connected_edge in all_edges:
-                    all_edges.remove(connected_edge)
-                third_coords = self.graph.vertices[third_vertex]
-                crossing_found = self.check_crossings_in_surrounding(all_edges, old_coords, new_coords, third_coords)
-                if crossing_found:
-                    return True
-            # for v2 in self.surroundings[v].connected_to:
-            #     edge1 = [v, v2] if v < v2 else [v2, v]
-            #     for edge2 in boundary:
-            #         if self.graph.check_edge_crossing(edge1, edge2):
-            #             return True
-        else:
-            for third_vertex in self.surroundings[v].connected_to:
-                third_coords = self.graph.vertices[third_vertex]
-                crossing_found = self.check_crossings_in_surrounding(surrounding_boundary_edges, old_coords, new_coords, third_coords)
-                if crossing_found:
-                    return True
-        return crossing_found
-
-    def check_crossings_in_surrounding(self, surrounding_boundary_edges, old_coords, new_coords, third_coords):
-        crossing_found = False
-        for edge in surrounding_boundary_edges:
-            segment1 = LineString([self.graph.vertices[edge[0]], self.graph.vertices[edge[1]]])
-            # We have to check all crossings between the edge and the triangle [old, new, third]
-            # first check
-            segment2 = LineString([old_coords, new_coords])
-            if segment1.crosses(segment2):
-                crossing_found = True
-                # print("Break - checkCrossings_in_surrounding 1")
-                break
-            # second check
-            segment2 = LineString([old_coords, third_coords])
-            if segment1.crosses(segment2):
-                crossing_found = True
-                # print("Break - checkCrossings_in_surrounding 2")
-                break
-            # third check
-            segment2 = LineString([new_coords, third_coords])
-            if segment1.crosses(segment2):
-                crossing_found = True
-                # print("Break - checkCrossings_in_surrounding 3")
-                break
-        return crossing_found

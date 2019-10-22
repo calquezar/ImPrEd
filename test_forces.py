@@ -137,28 +137,39 @@ import time
 # theta = 1  # force impact
 #####################################
 beta = 0.01  # node_node_attraction
-delta = 0.01  # node_node_repulsion
-gamma = 0.1 # node_edge_repulsion
-theta = 1  # force impact
+delta = 0.1  # node_node_repulsion
+gamma = 1 # node_edge_repulsion
+theta = 1 # force impact
 #####################################
 sizes = []
 times_not_opt = []
 times_opt = []
 hist_graphs = []
 graph_evolution = []
-for i in [200]:
+for i in [100]:
     sizes.append(i)
     np.random.seed(10)
     points = 1000*np.random.random((i, 2))
     points = addLimitPoints(points)
     vor = Voronoi(points)
 #########
+    # points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
+    #                    [2, 1], [2, 2], [-5, 5], [5, 5], [5, -5], [-5, -5]])
+    # vor = Voronoi(points)
+    # vor.vertices[13][0] = 0.0000000005
+    # vor.vertices[13][1] = 0.0000000005
+    # vor.vertices[14][0] = 0.0000000015
+    # vor.vertices[14][1] = 0.0000000005
+    # vor.vertices[15][0] = 0.0000000015
+    # vor.vertices[15][1] = 0.0000000015
+    # vor.vertices[12][0] = 0.0000000005
+    # vor.vertices[12][1] = 0.0000000015
 
 ##########
     g = Graph(vor)
-    g.plot = False
+    g.plot = True
     # Force algorithm
-    maxIter = 200
+    maxIter = 1000
     tol = 0.2
     # # not opt
     # f = ForceDirectedLayout(g, beta, delta, gamma, theta, maxIter, opt=False)
@@ -184,3 +195,4 @@ for i in [200]:
 #     # animating over 10 frames, with an interval of 200ms between frames.
 #     anim = FuncAnimation(plt.figure(), update, frames=np.arange(0, maxIter), interval=200, repeat=False)
 #     anim.save('graph.gif', dpi=80, writer='imagemagick')
+
