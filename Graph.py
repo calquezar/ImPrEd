@@ -30,6 +30,7 @@ from shapely.geometry.polygon import LinearRing
 from descartes.patch import PolygonPatch
 import statistics
 from types import SimpleNamespace
+import time
 
 class SurroundingInfo:
     def __init__(self, v, e, c):
@@ -74,9 +75,28 @@ class Graph:
         self.sort_all_regions(clockwise)
         self.boundary = self.get_boundary_vertices(clockwise)
         self.plot = False
+        self.fix_axes = True
 
     def copy(self):
         return copy.deepcopy(self)
+
+
+
+    def calculate_scale(self):
+        distances = []
+        for i in range(len(self.vertices)-1):
+            for j in range(i+1, len(self.vertices)):
+                v1 = self.vertices[i]
+                v2 = self.vertices[j]
+                distances.append(math.sqrt((v1[0] - v2[0]) ** 2 + (v1[1] - v2[1]) ** 2))
+        return np.min(np.array(distances))
+        #
+        # xmin = np.amin(self.vertices[:, 0])
+        # xmax = np.amax(self.vertices[:, 0])
+        # ymin = np.amin(self.vertices[:, 1])
+        # ymax = np.amax(self.vertices[:, 1])
+        # minimum = min(xmax-xmin, ymax-ymin)
+        # return minimum
 
     def area(self, region):
         r"""
@@ -141,6 +161,14 @@ class Graph:
         rect += [[maxs[0], maxs[1]]] # top-right
         rect += [[mins[0], maxs[1]]] # top-left
         return rect
+
+    def get_stop_criteria(self):
+        r"""
+            Return
+        """
+        self.regions.sort(key=self.area)  # sort regions by area in ascending order
+        areas = [self.area(r) for r in self.regions]
+        return areas[-1]/areas[0]
 
     def get_std_area(self):
         r"""
@@ -369,12 +397,15 @@ class Graph:
             y = [v0[1], v1[1]]
             plt.plot(x, y, color='k')
         axes = plt.gca()
-        xmin = np.amin(self.vertices[:, 0])
-        xmax = np.amax(self.vertices[:, 0])
-        ymin = np.amin(self.vertices[:, 1])
-        ymax = np.amax(self.vertices[:, 1])
-        axes.set_xlim([xmin, xmax])
-        axes.set_ylim([ymin, ymax])
+        print(self.fix_axes)
+        if self.fix_axes:
+            xmin = np.amin(self.vertices[:, 0])
+            xmax = np.amax(self.vertices[:, 0])
+            ymin = np.amin(self.vertices[:, 1])
+            ymax = np.amax(self.vertices[:, 1])
+            axes.set_xlim([xmin, xmax])
+            axes.set_ylim([ymin, ymax])
+            self.fix_axes = False
         plt.pause(pause)
 
 ##############################################################################################
@@ -571,12 +602,13 @@ class Graph:
         if v in self.boundary:
             boundary = self.get_boundary_edges()
             all_edges = boundary + surrounding_boundary_edges
+            filtered_edges = [e for e in filter(lambda x: v not in x, all_edges)]
             for third_vertex in surroundings[v].connected_to:
-                connected_edge = [v, third_vertex] if v < third_vertex else [third_vertex, v]
-                while connected_edge in all_edges:
-                    all_edges.remove(connected_edge)
+                # connected_edge = [v, third_vertex] if v < third_vertex else [third_vertex, v]
+                # while connected_edge in all_edges:
+                #     all_edges.remove(connected_edge)
                 third_coords = self.vertices[third_vertex]
-                crossing_found = self.check_crossings_in_surrounding(all_edges, old_coords, new_coords, third_coords)
+                crossing_found = self.check_crossings_in_surrounding(filtered_edges, old_coords, new_coords, third_coords)
                 if crossing_found:
                     return True
             # for v2 in self.surroundings[v].connected_to:
