@@ -397,7 +397,6 @@ class Graph:
             y = [v0[1], v1[1]]
             plt.plot(x, y, color='k')
         axes = plt.gca()
-        print(self.fix_axes)
         if self.fix_axes:
             xmin = np.amin(self.vertices[:, 0])
             xmax = np.amax(self.vertices[:, 0])

@@ -119,7 +119,7 @@ class ForceDirectedLayout:
         """
         return math.sqrt((v1[0] - v2[0]) ** 2 + (v1[1] - v2[1]) ** 2)
 
-    def _forces_calculation(self, set_of_vertices, q_tree):
+    def _forces_calculation(self, set_of_vertices):
         r"""
             Return the corresponding forces for each vertex
 
@@ -317,7 +317,7 @@ class ForceDirectedLayout:
         f_square = forces*forces
         total_force = np.sum(f_square, axis=0)
         max_force = np.sqrt(np.max(total_force))
-        self.theta = minimum / (max_force*(len(self.graph.vertices)*2))
+        self.theta = minimum / (max_force*(np.sqrt(len(self.graph.vertices))))
         # print(self.theta)
         colissions = True
         index = 1
@@ -418,7 +418,7 @@ class ForceDirectedLayout:
             stop = self.graph.get_stop_criteria()
             # print("Iter: " + str(it) + "; Crossings: " + str(self.graph.count_edge_crossings()) + \
             #       "; Regions: " + str(len(self.graph.regions)))
-            q_tree = QuadTree(QT.arrayToList(self.graph.vertices))
+            # q_tree = QuadTree(QT.arrayToList(self.graph.vertices))
             # q_tree.plot()
             # region selection in function of relative area
             # region = self._select_region(self.graph, tol)
@@ -429,7 +429,7 @@ class ForceDirectedLayout:
             # Step 0 Project boundary to circumcircle
             # self.graph.project_boundary_to_circumcircle()
             # Step 1
-            forces = self._forces_calculation(set_of_vertices, q_tree)
+            forces = self._forces_calculation(set_of_vertices)
             # Step 2
             # safe_displacements = self._calculate_maximum_movements(set_of_vertices)
             # Step 3

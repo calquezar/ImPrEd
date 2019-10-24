@@ -170,7 +170,7 @@ for i in [50]:
     g = Graph(vor)
     g.plot = True
     # Force algorithm
-    maxIter = 1000
+    maxIter = 100
     tol = 0.2
     # # not opt
     # f = ForceDirectedLayout(g, beta, delta, gamma, theta, maxIter, opt=False)
