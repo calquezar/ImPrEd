@@ -146,12 +146,21 @@ times_not_opt = []
 times_opt = []
 hist_graphs = []
 graph_evolution = []
-for i in [50]:
+
+points = np.random.random((20, 2))
+points = addLimitPoints(points)
+vor = Voronoi(points)
+voronoi_plot_2d(vor)
+# g = Graph(vor)
+# g.plot_graph()
+for i in [30]:
     sizes.append(i)
     np.random.seed(10)
     points = np.random.random((i, 2))
+    # points[5:15]=points[5:15]*0.0001
     points = addLimitPoints(points)
     vor = Voronoi(points)
+
 # #########
 #     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
 #                        [2, 1], [2, 2], [-5, 5], [5, 5], [5, -5], [-5, -5]])
@@ -179,7 +188,7 @@ for i in [50]:
     # end = time.time()
     # times_not_opt.append(end-start)
     # opt
-    beta = g.calculate_scale()
+    beta = g.calculate_scale() # node_node_attraction
     delta = 0.01  # node_node_repulsion
     gamma = 0.1  # node_edge_repulsion
     f = ForceDirectedLayout(g, beta, delta, gamma, maxIter, opt=True)
@@ -200,4 +209,10 @@ for i in [50]:
 #     # animating over 10 frames, with an interval of 200ms between frames.
 #     anim = FuncAnimation(plt.figure(), update, frames=np.arange(0, maxIter), interval=200, repeat=False)
 #     anim.save('graph.gif', dpi=80, writer='imagemagick')
-
+#
+# a = np.array(graph_evolution)
+# plt.plot(a)
+# plt.figure()
+# plt.plot(np.diff(a,1))
+# plt.figure()
+# plt.plot(np.diff(a,2))

@@ -139,11 +139,11 @@ class ForceDirectedLayout:
         """
         centroid = np.mean(self.graph.vertices, axis=0)
         boundary_vertices = self.graph.get_boundary_vertices()
-        forces = np.zeros([len(set_of_vertices), 2])
+        forces = np.zeros([len(self.graph.vertices), 2])
         for i in range(len(set_of_vertices)):
             v_index = set_of_vertices[i]
-            v = np.array(self.graph.vertices[set_of_vertices[v_index]])
-            sv = self.surroundings[i]
+            v = np.array(self.graph.vertices[v_index])
+            sv = self.surroundings[v_index]
             # fa = np.array([0, 0])
             # fr = np.array([0, 0])
             # fe = np.array([0, 0])
@@ -154,7 +154,7 @@ class ForceDirectedLayout:
                 f = self._node_node_attraction(v, vc)
                 # fa[0] += f[0]
                 # fa[1] += f[1]
-                forces[i] += f
+                forces[v_index] += f
             # repulsion between neighbour nodes
             # neighbours = q_tree.findPoints(QPoint(v[0], v[1]), self.delta)
             neighbours = [self.graph.vertices[w] for w in range(len(self.graph.vertices)) if w != i]
@@ -163,7 +163,7 @@ class ForceDirectedLayout:
                 f = self._node_node_repulsion(v, n)
                 # fr[0] += f[0]
                 # fr[1] += f[1]
-                forces[i] += f
+                forces[v_index] += f
             # repulsion with surrounding edges
             for edge in sv.edges:
                 edge_coords = [self.graph.vertices[edge[0]], \
@@ -174,7 +174,7 @@ class ForceDirectedLayout:
                 # fe[1] += f[1]
                 forces[edge[0]] -= 0.5*f
                 forces[edge[1]] -= 0.5*f
-                forces[i] += f
+                forces[v_index] += f
             # if v_index in boundary_vertices:
             #     if len(self.surroundings[v_index].connected_to) == 2:
             #         d = self._dist(v, centroid)
@@ -321,15 +321,16 @@ class ForceDirectedLayout:
         # print(self.theta)
         colissions = True
         index = 1
+        thetas = np.array(len(forces)*[self.theta])
         while colissions:
             # print("Index: " + str(index), self.theta)
             index += 1
             colissions = False
             copy_graph = self.graph.copy()
             for i in range(len(copy_graph.vertices)):
-                new_coords = copy_graph.vertices[i] + self.theta*forces[i]
+                new_coords = copy_graph.vertices[i] + thetas[i]*forces[i]
                 if copy_graph.check_crossings(i, new_coords, self.surroundings):
-                    self.theta *= 0.5
+                    thetas[i] *= 0.5
                     colissions = True
                     # copy_graph.plot_graph(0.1)
                     x = [copy_graph.vertices[i][0], new_coords[0]]
@@ -416,6 +417,8 @@ class ForceDirectedLayout:
         for it in range(self.maxIter):
             print("Iter: " + str(it))
             stop = self.graph.get_stop_criteria()
+            std, normalized_std, region = self.graph.get_std_area()
+            print("std: "+str(normalized_std))
             # print("Iter: " + str(it) + "; Crossings: " + str(self.graph.count_edge_crossings()) + \
             #       "; Regions: " + str(len(self.graph.regions)))
             # q_tree = QuadTree(QT.arrayToList(self.graph.vertices))
@@ -426,6 +429,7 @@ class ForceDirectedLayout:
             #     print("Finished")
             #     break
             set_of_vertices = range(len(self.graph.vertices))
+            # set_of_vertices = region
             # Step 0 Project boundary to circumcircle
             # self.graph.project_boundary_to_circumcircle()
             # Step 1
@@ -435,8 +439,9 @@ class ForceDirectedLayout:
             # Step 3
             # self._move_nodes(set_of_vertices, forces, safe_displacements)
             self._move(set_of_vertices, forces, it)
+            # self.graph.project_boundary_to_circumcircle()
             stop = self.graph.get_stop_criteria()
-            print(stop)
+            # print(stop)
             # crossings = self.graph.count_edge_crossings()
             # if crossings > 0:
             #     break
