@@ -439,7 +439,7 @@ class ForceDirectedLayout:
             # Step 3
             # self._move_nodes(set_of_vertices, forces, safe_displacements)
             self._move(set_of_vertices, forces, it)
-            # self.graph.project_boundary_to_circumcircle()
+            self.graph.project_boundary_to_circumcircle()
             stop = self.graph.get_stop_criteria()
             # print(stop)
             # crossings = self.graph.count_edge_crossings()

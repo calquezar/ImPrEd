@@ -153,7 +153,7 @@ vor = Voronoi(points)
 voronoi_plot_2d(vor)
 # g = Graph(vor)
 # g.plot_graph()
-for i in [30]:
+for i in [100]:
     sizes.append(i)
     np.random.seed(10)
     points = np.random.random((i, 2))
