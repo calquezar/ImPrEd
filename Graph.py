@@ -390,6 +390,7 @@ class Graph:
             Plot graph
         """
         plt.clf()
+        plt.axis('off')
         for e in self.edges:
             v0 = self.vertices[e[0]]
             v1 = self.vertices[e[1]]

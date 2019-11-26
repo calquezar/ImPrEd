@@ -11,6 +11,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
+# np.random.seed(10)
+# points = np.random.random((100, 2))
+# points = addLimitPoints(points)
+# vor = Voronoi(points)
+# g = Graph(vor)
+# g.plot_graph()
+
+
 #####################################################################
 # beta = 10
 # delta = 10
@@ -147,12 +155,6 @@ times_opt = []
 hist_graphs = []
 graph_evolution = []
 
-points = np.random.random((20, 2))
-points = addLimitPoints(points)
-vor = Voronoi(points)
-voronoi_plot_2d(vor)
-# g = Graph(vor)
-# g.plot_graph()
 for i in [100]:
     sizes.append(i)
     np.random.seed(10)
@@ -161,10 +163,10 @@ for i in [100]:
     points = addLimitPoints(points)
     vor = Voronoi(points)
 
-# #########
+# # #########
 #     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
 #                        [2, 1], [2, 2], [-5, 5], [5, 5], [5, -5], [-5, -5]])
-#     points *= 1000
+#     # points *= 1000
 #     vor = Voronoi(points)
 #     vor.vertices[13][0] = 0.0000000005
 #     vor.vertices[13][1] = 0.0000000005
@@ -177,9 +179,10 @@ for i in [100]:
 
 ##########
     g = Graph(vor)
+    g.plot_graph()
     g.plot = True
     # Force algorithm
-    maxIter = 100
+    maxIter =8
     tol = 0.2
     # # not opt
     # f = ForceDirectedLayout(g, beta, delta, gamma, theta, maxIter, opt=False)

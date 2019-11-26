@@ -4,8 +4,24 @@ from scipy.spatial import Voronoi, voronoi_plot_2d
 from Graph import Graph, addLimitPoints
 import time
 
+##########################################################
+# # caso importante
+# np.random.seed(10)
+# case = 1
+# if case == 0:
+#     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
+#                        [2, 1], [2, 2]])
+# elif case == 1: # with 20,2 we found problems
+#     points = np.random.random((20, 2))
+#
+#
+# points = addLimitPoints(points)
+# vor = Voronoi(points)
+# g = Graph(vor)
+#############################################################
+# caso importante
 np.random.seed(10)
-case = 1
+case = 0
 if case == 0:
     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
                        [2, 1], [2, 2]])
@@ -16,7 +32,7 @@ elif case == 1: # with 20,2 we found problems
 points = addLimitPoints(points)
 vor = Voronoi(points)
 g = Graph(vor)
-
+#############################################################
 # # check region-relative colouring
 # for r in g.regions:
 #     g.plot_graph()
