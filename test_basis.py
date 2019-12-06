@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from Graph import Graph, addLimitPoints
 import time
-
+import copy
 ##########################################################
 # # caso importante
 # np.random.seed(10)
@@ -87,19 +87,17 @@ g = Graph(vor)
 #         g2.plot_graph()
 
 g.sort_all_regions(clockwise=False)
-def find_path(g, edge, vertex_ending, source_path=[], clockwise=False):
-    r"""
-        Falta concatenar los caminos en la recursión y
-        que la función devuelva el camino resultante
-    """
+def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=False):
+
     regions = g.get_regions_by_edge(edge)
     if regions:
-        plt.cla()
-        g.plot_graph()
-        g.colour_edge(edge)
-        plt.pause(0.5)
-
         region = regions[0]  # only one region because the edge is on the boundary of the graph
+        # plt.cla()
+        # g.plot_graph()
+        # g.colour_edge(edge)
+        # plt.pause(0.5)
+        # g.colour_region(region)
+        # plt.pause(10)
         index0 = region.index(edge[0])
         index1 = region.index(edge[1])
         if index0 == 0 and index1 == len(region)-1:
@@ -109,6 +107,23 @@ def find_path(g, edge, vertex_ending, source_path=[], clockwise=False):
         else:
             shift = index0 if index0 < index1 else index1
         region = np.roll(region, -shift).tolist()
+
+        # closed path around the region of interest
+        closedPathRegion = []
+        for w in range(len(region)):
+            closedPathRegion += [[region[w], region[(w+1)%len(region)]]]
+
+        # geometric generator of the corresponding region from base point
+        generator = copy.deepcopy(source_path)
+        generator += closedPathRegion
+        reversedPath = copy.deepcopy(source_path)
+        reversedPath.reverse()
+        for e in reversedPath:
+            e.reverse()
+        generator += reversedPath
+        # add generator to the list of generators
+        generators += [generator]
+
         # region = region[shift:]+region[:shift]
 
         # g.plot_graph()
@@ -126,19 +141,26 @@ def find_path(g, edge, vertex_ending, source_path=[], clockwise=False):
             source_path += [next_edge]
             next_edge = g.get_consecutive_edge(next_edge, vertex_ending, boundary_edges)
             vertex_ending = next_edge[0] if next_edge[0] != vertex_ending else next_edge[1]
+
         region = np.roll(region, shift).tolist()  # restore the default value of the region
-        find_path(g.remove_region(region), next_edge, vertex_ending, source_path, clockwise)
+        find_basis(g.remove_region(region), next_edge, vertex_ending, generators=generators, source_path=source_path, clockwise=clockwise)
     else:
         print("No regions")
-    return source_path
+    return generators
 
 
 boundary_vertices = g.get_boundary_vertices(clockwise=False)
 v0 = boundary_vertices[0]
 v1 = boundary_vertices[1]
 edge = [v0, v1] if v0 < v1 else [v1, v0]
-path = find_path(g, edge, v1)
+basis = find_basis(g, edge, v1)
 
-g.plot_graph()
-for e in path:
-    g.colour_edge(e)
+
+for generator in basis:
+    g.plot_graph()
+    # print(generator)
+    for edge in generator:
+        e = copy.deepcopy(edge)
+        if e[0] > e[1]:
+            e.reverse()
+        g.colour_edge(e)
