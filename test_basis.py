@@ -22,14 +22,14 @@ import copy
 #############################################################
 # caso importante
 np.random.seed(10)
-case = 2
+case = 1
 if case == 0:
     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
                        [2, 1], [2, 2]])
 elif case == 1: # with 20,2 we found problems
     points = np.random.random((20, 2))
 elif case == 2:
-    points = np.random.random((40, 2))
+    points = np.random.random((20, 2))
 
 
 points = addLimitPoints(points)
@@ -202,24 +202,21 @@ v1 = boundary_vertices[1]
 edge = [v0, v1] if v0 < v1 else [v1, v0]
 basis = find_basis(g, edge, v1)
 
-# comb = combineGenerators(basis[3], basis[2])
-# comb2 = combineGenerators(basis[2], comb)
-# for generator in [comb]:
-#     g.plot_graph()
-#     # print(generator)
-#     for edge in generator:
-#         e = copy.deepcopy(edge)
-#         if e[0] > e[1]:
-#             e.reverse()
-#         g.colour_edge(e)
-
-comb = combineGenerators(basis[1], basis[0])
-
-for i in range(2, len(basis)):
-    comb = combineGenerators(basis[i], comb)
-g.plot_graph()
-for edge in comb:
-    e = copy.deepcopy(edge)
-    if e[0] > e[1]:
-        e.reverse()
-    g.colour_edge(e)
+for generator in basis:
+    g.plot_graph()
+    # print(generator)
+    for edge in generator:
+        e = copy.deepcopy(edge)
+        if e[0] > e[1]:
+            e.reverse()
+        g.colour_edge(e)
+############################################################3
+# comb = combineGenerators(basis[1], basis[0])
+# for i in range(2, len(basis)):
+#     comb = combineGenerators(basis[i], comb)
+# g.plot_graph()
+# for edge in comb:
+#     e = copy.deepcopy(edge)
+#     if e[0] > e[1]:
+#         e.reverse()
+#     g.colour_edge(e)
