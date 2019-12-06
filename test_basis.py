@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from Graph import Graph, addLimitPoints
+from ForceDirectedLayout import ForceDirectedLayout
 import time
 import copy
 ##########################################################
@@ -21,17 +22,31 @@ import copy
 #############################################################
 # caso importante
 np.random.seed(10)
-case = 1
+case = 2
 if case == 0:
     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
                        [2, 1], [2, 2]])
 elif case == 1: # with 20,2 we found problems
     points = np.random.random((20, 2))
+elif case == 2:
+    points = np.random.random((40, 2))
 
 
 points = addLimitPoints(points)
 vor = Voronoi(points)
 g = Graph(vor)
+
+g.plot_graph()
+g.plot = True
+# Force algorithm
+maxIter = 30
+tol = 0.2
+beta = g.calculate_scale()  # node_node_attraction
+delta = 0.01  # node_node_repulsion
+gamma = 0.1  # node_edge_repulsion
+f = ForceDirectedLayout(g, beta, delta, gamma, maxIter, opt=True)
+f.run()
+g = f.graph
 #############################################################
 # # check region-relative colouring
 # for r in g.regions:
@@ -97,25 +112,28 @@ def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=
         # g.colour_edge(edge)
         # # g.colour_region(region)
         # plt.pause(0.5)
-        index0 = region.index(edge[0])
-        index1 = region.index(edge[1])
-        if index0 == 0 and index1 == len(region)-1:
-            shift = index1
-        elif index0 == len(region)-1 and index1 == 0:
-            shift = index0
-        else:
-            shift = index0 if index0 < index1 else index1
+        ################################################################
+        startv = edge[0] if edge[0] != vertex_ending else edge[1]
+        index = region.index(startv)
+        # index0 = region.index(edge[0])
+        # index1 = region.index(edge[1])
+        # if index0 == 0 and index1 == len(region)-1:
+        #     shift = index1
+        # elif index0 == len(region)-1 and index1 == 0:
+        #     shift = index0
+        # else:
+        #     shift = index0 if index0 < index1 else index1
+        shift = index
         region = np.roll(region, -shift).tolist()
-
+        ################################################################
         # closed path around the region of interest
         closedPathRegion = []
         for w in range(len(region)):
             w1 = region[w]
             w2 = region[(w+1)%len(region)]
-            # e = [w1, w2] if w1 < w2 else [w2, w1]
-            # closedPathRegion += [e]
-            closedPathRegion += [[w1, w2]]
-
+            e = [w1, w2]
+            closedPathRegion += [e]
+            # closedPathRegion += [[w1, w2]]
         # geometric generator of the corresponding region from base point
         generator = copy.deepcopy(source_path)
         generator += closedPathRegion
@@ -135,7 +153,7 @@ def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=
         #     e = [region[i], region[(i+1)%len(region)]]
         #     e = [e[0], e[1]] if e[0] < e[1] else [e[1], e[0]]
         #     g.colour_edge(e)
-        source_path += [edge]
+        source_path += [[startv, vertex_ending]]
         boundary_edges = g.get_boundary_edges()
         next_edge = g.get_consecutive_edge(edge, vertex_ending, boundary_edges)
         vertex_ending = next_edge[0] if next_edge[0] != vertex_ending else next_edge[1]
@@ -161,15 +179,16 @@ def combineGenerators (g1, g2):
     while i < limit:
         e1 = g1copy[i]
         e2 = g2copy[i]
-        e2.reverse()
-        if e1 == e2:
-            e2.reverse()
+        # e2.reverse()
+        if e1[0] in e2 and e1[1] in e2:
+            # e2.reverse()
             g1copy.remove(e1)
             g2copy.remove(e2)
             i = 0
             limit = min(len(g1copy), len(g2copy))
         else:
-            e2.reverse()
+            print(e1, e2)
+            # e2.reverse()
             break
     g1copy.reverse()
     combined = g1copy + g2copy
@@ -183,7 +202,7 @@ v1 = boundary_vertices[1]
 edge = [v0, v1] if v0 < v1 else [v1, v0]
 basis = find_basis(g, edge, v1)
 
-# comb = combineGenerators(basis[1], basis[0])
+# comb = combineGenerators(basis[3], basis[2])
 # comb2 = combineGenerators(basis[2], comb)
 # for generator in [comb]:
 #     g.plot_graph()
@@ -193,3 +212,14 @@ basis = find_basis(g, edge, v1)
 #         if e[0] > e[1]:
 #             e.reverse()
 #         g.colour_edge(e)
+
+comb = combineGenerators(basis[1], basis[0])
+
+for i in range(2, len(basis)):
+    comb = combineGenerators(basis[i], comb)
+g.plot_graph()
+for edge in comb:
+    e = copy.deepcopy(edge)
+    if e[0] > e[1]:
+        e.reverse()
+    g.colour_edge(e)
