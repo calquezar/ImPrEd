@@ -307,16 +307,36 @@ class Graph:
     #             edges.append(e)
     #     return edges
 
-    def remove_region(self, region):
+    def remove_edge(self,edge):
+        self.edges.remove(edge)
+
+    def remove_region(self, region, edge):
 
         new_graph = self.copy()
         if region in new_graph.regions:
             graph_boundary = new_graph.get_boundary_edges()
             region_boundary = new_graph.get_region_boundary(region)
+            candidates = []
             for e in region_boundary:
                 if e in graph_boundary:
+                    candidates += [e]
+            connectedToEdge = [edge]
+            findmore = True
+            while findmore:
+                findmore = False
+                for e in connectedToEdge:
+                    if e in candidates:
+                        candidates.remove(e)
+                for e1 in connectedToEdge:
+                    aux = [e for e in candidates if e1[0] in e or e1[1] in e]
+                if len(aux) > 0:
+                    findmore = True
+                connectedToEdge += aux
+            for e in connectedToEdge:
+                if e in new_graph.edges:
                     new_graph.edges.remove(e)
             new_graph.regions.remove(region)
+
         return new_graph
 
     def sort_region_vertices(self, region, clockwise=False):

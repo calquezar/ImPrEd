@@ -21,7 +21,7 @@ import copy
 #############################################################
 # caso importante
 np.random.seed(10)
-case = 0
+case = 1
 if case == 0:
     points = np.array([[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], \
                        [2, 1], [2, 2]])
@@ -95,9 +95,8 @@ def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=
         # plt.cla()
         # g.plot_graph()
         # g.colour_edge(edge)
+        # # g.colour_region(region)
         # plt.pause(0.5)
-        # g.colour_region(region)
-        # plt.pause(10)
         index0 = region.index(edge[0])
         index1 = region.index(edge[1])
         if index0 == 0 and index1 == len(region)-1:
@@ -111,7 +110,11 @@ def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=
         # closed path around the region of interest
         closedPathRegion = []
         for w in range(len(region)):
-            closedPathRegion += [[region[w], region[(w+1)%len(region)]]]
+            w1 = region[w]
+            w2 = region[(w+1)%len(region)]
+            # e = [w1, w2] if w1 < w2 else [w2, w1]
+            # closedPathRegion += [e]
+            closedPathRegion += [[w1, w2]]
 
         # geometric generator of the corresponding region from base point
         generator = copy.deepcopy(source_path)
@@ -123,7 +126,6 @@ def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=
         generator += reversedPath
         # add generator to the list of generators
         generators += [generator]
-
         # region = region[shift:]+region[:shift]
 
         # g.plot_graph()
@@ -137,16 +139,42 @@ def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=
         boundary_edges = g.get_boundary_edges()
         next_edge = g.get_consecutive_edge(edge, vertex_ending, boundary_edges)
         vertex_ending = next_edge[0] if next_edge[0] != vertex_ending else next_edge[1]
-        while g.is_in_region(next_edge, region) and len(g.regions) > 1:
+        while (g.is_in_region(next_edge, region) or len(g.get_regions_by_edge(next_edge)) == 0) and len(g.regions) > 1:
             source_path += [next_edge]
+            if len(g.get_regions_by_edge(next_edge)) == 0:  # edge does not belong to any region
+                g.remove_edge(next_edge)
             next_edge = g.get_consecutive_edge(next_edge, vertex_ending, boundary_edges)
             vertex_ending = next_edge[0] if next_edge[0] != vertex_ending else next_edge[1]
 
         region = np.roll(region, shift).tolist()  # restore the default value of the region
-        find_basis(g.remove_region(region), next_edge, vertex_ending, generators=generators, source_path=source_path, clockwise=clockwise)
+        find_basis(g.remove_region(region, source_path[-1]), next_edge, vertex_ending, generators=generators, source_path=source_path, clockwise=clockwise)
     else:
         print("No regions")
     return generators
+
+def combineGenerators (g1, g2):
+    g1copy = copy.deepcopy(g1)
+    g2copy = copy.deepcopy(g2)
+    limit = min(len(g1copy), len(g2copy))
+    g1copy.reverse()
+    i = 0
+    while i < limit:
+        e1 = g1copy[i]
+        e2 = g2copy[i]
+        e2.reverse()
+        if e1 == e2:
+            e2.reverse()
+            g1copy.remove(e1)
+            g2copy.remove(e2)
+            i = 0
+            limit = min(len(g1copy), len(g2copy))
+        else:
+            e2.reverse()
+            break
+    g1copy.reverse()
+    combined = g1copy + g2copy
+    return combined
+
 
 
 boundary_vertices = g.get_boundary_vertices(clockwise=False)
@@ -155,12 +183,13 @@ v1 = boundary_vertices[1]
 edge = [v0, v1] if v0 < v1 else [v1, v0]
 basis = find_basis(g, edge, v1)
 
-
-for generator in basis:
-    g.plot_graph()
-    # print(generator)
-    for edge in generator:
-        e = copy.deepcopy(edge)
-        if e[0] > e[1]:
-            e.reverse()
-        g.colour_edge(e)
+# comb = combineGenerators(basis[1], basis[0])
+# comb2 = combineGenerators(basis[2], comb)
+# for generator in [comb]:
+#     g.plot_graph()
+#     # print(generator)
+#     for edge in generator:
+#         e = copy.deepcopy(edge)
+#         if e[0] > e[1]:
+#             e.reverse()
+#         g.colour_edge(e)
