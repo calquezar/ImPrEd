@@ -397,15 +397,15 @@ class Graph:
             for e in edges:
                 self.colour_edge(e)
 
-    def colour_edge(self, e):
+    def colour_edge(self, e, pause=1):
         v0 = self.vertices[e[0]]
         v1 = self.vertices[e[1]]
         x = [v0[0], v1[0]]
         y = [v0[1], v1[1]]
         plt.plot(x, y, color='r')
-        plt.pause(1)
+        plt.pause(pause)
 
-    def plot_graph(self, pause=0.1):
+    def plot_graph(self, pause=0.1, color='k'):
         r"""
             Plot graph
         """
@@ -416,7 +416,7 @@ class Graph:
             v1 = self.vertices[e[1]]
             x = [v0[0], v1[0]]
             y = [v0[1], v1[1]]
-            plt.plot(x, y, color='k')
+            plt.plot(x, y, color=color)
         axes = plt.gca()
         if self.fix_axes:
             xmin = np.amin(self.vertices[:, 0])
