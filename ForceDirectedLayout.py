@@ -439,7 +439,7 @@ class ForceDirectedLayout:
             # Step 3
             # self._move_nodes(set_of_vertices, forces, safe_displacements)
             self._move(set_of_vertices, forces, it)
-            self.graph.project_boundary_to_circumcircle()
+            #self.graph.project_boundary_to_circumcircle()
             stop = self.graph.get_stop_criteria()
             # print(stop)
             # crossings = self.graph.count_edge_crossings()
@@ -448,6 +448,7 @@ class ForceDirectedLayout:
             # Plot
             if self.graph.plot:
                 self.graph.plot_graph(0.01)
+                plt.savefig("Figures/LayoutExamples/100nodes/frame-" + str(it) + ".png", format='png')
 
             # if self.graph.count_edge_crossings() > 0:
             #     print("Deberia haber avisado antes")

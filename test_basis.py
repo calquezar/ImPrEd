@@ -39,7 +39,7 @@ g = Graph(vor)
 g.plot_graph()
 g.plot = True
 # Force algorithm
-maxIter = 20
+maxIter = 30
 tol = 0.2
 beta = g.calculate_scale()  # node_node_attraction
 delta = 0.01  # node_node_repulsion
@@ -201,22 +201,31 @@ v0 = boundary_vertices[0]
 v1 = boundary_vertices[1]
 edge = [v0, v1] if v0 < v1 else [v1, v0]
 basis = find_basis(g, edge, v1)
-
+count = 0
 for generator in basis:
     g.plot_graph(pause=0.1, color=(0, 0, 0, 0.3))
+    #plt.savefig("Figures/Basis/20nodes/frame-"+str(count)+".png", format='png')
+    count += 1
     # print(generator)
     for edge in generator:
         e = copy.deepcopy(edge)
         if e[0] > e[1]:
             e.reverse()
         g.colour_edge(e, pause=0.1)
+        #plt.savefig("Figures/Basis/20nodes/frame-" + str(count) + ".png", format='png')
+        count += 1
 ############################################################3
-# comb = combineGenerators(basis[1], basis[0])
-# for i in range(2, len(basis)):
+# comb = basis[0]
+# count = 0
+# for i in range(1, len(basis)):
 #     comb = combineGenerators(basis[i], comb)
-# g.plot_graph(pause=0.1, color=(0, 0, 0, 0.3))
-# for edge in comb:
-#     e = copy.deepcopy(edge)
-#     if e[0] > e[1]:
-#         e.reverse()
-#     g.colour_edge(e, pause=0.1)
+#     g.plot_graph(pause=0.1, color=(0, 0, 0, 0.3))
+#     plt.savefig("Figures/Basis/20NodesBasisComposition/frame-"+str(count)+".png", format='png')
+#     count += 1
+#     for edge in comb:
+#         e = copy.deepcopy(edge)
+#         if e[0] > e[1]:
+#             e.reverse()
+#         g.colour_edge(e, pause=0.1)
+#         plt.savefig("Figures/Basis/20NodesBasisComposition/frame-" + str(count) + ".png", format='png')
+#         count += 1

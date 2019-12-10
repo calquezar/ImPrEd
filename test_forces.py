@@ -182,7 +182,7 @@ for i in [100]:
     g.plot_graph()
     g.plot = True
     # Force algorithm
-    maxIter =8
+    maxIter = 40
     tol = 0.2
     # # not opt
     # f = ForceDirectedLayout(g, beta, delta, gamma, theta, maxIter, opt=False)
