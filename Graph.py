@@ -381,7 +381,7 @@ class Graph:
             points.append(self.vertices[v])
 
         polygon = Polygon(points)
-        patch = PolygonPatch(polygon, facecolor=[0, 0, 0.5], edgecolor=[0, 0, 0], alpha=0.7, zorder=2)
+        patch = PolygonPatch(polygon, facecolor=[0, 0, 0.5], edgecolor=[0, 0, 0], alpha=0.3, zorder=2)
         ax = plt.gca()
         ax.add_patch(patch)
         plt.pause(0.5)
@@ -409,7 +409,7 @@ class Graph:
         r"""
             Plot graph
         """
-        plt.clf()
+        # plt.clf()
         plt.axis('off')
         for e in self.edges:
             v0 = self.vertices[e[0]]

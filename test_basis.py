@@ -36,10 +36,10 @@ points = addLimitPoints(points)
 vor = Voronoi(points)
 g = Graph(vor)
 
-g.plot_graph()
-g.plot = True
+# g.plot_graph()
+g.plot = False
 # Force algorithm
-maxIter = 30
+maxIter = 20
 tol = 0.2
 beta = g.calculate_scale()  # node_node_attraction
 delta = 0.01  # node_node_repulsion
@@ -102,16 +102,17 @@ g = f.graph
 #         g2.plot_graph()
 
 g.sort_all_regions(clockwise=False)
-def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=False):
+def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=False, initialGraph = None,count=0):
 
     regions = g.get_regions_by_edge(edge)
     if regions:
         region = regions[0]  # only one region because the edge is on the boundary of the graph
-        # plt.cla()
-        # g.plot_graph()
+        plt.cla()
+        initialGraph.plot_graph(pause=0.1, color=(0, 0, 0, 0.2))
+        g.plot_graph()
+        # plt.savefig("Figures/frame-" + str(count) + ".png", format='png')
+        count += 1
         # g.colour_edge(edge)
-        # # g.colour_region(region)
-        # plt.pause(0.5)
         ################################################################
         startv = edge[0] if edge[0] != vertex_ending else edge[1]
         index = region.index(startv)
@@ -142,6 +143,23 @@ def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=
         for e in reversedPath:
             e.reverse()
         generator += reversedPath
+
+        for e in source_path:
+            g.colour_edge(e, pause=0.1)
+        # plt.savefig("Figures/frame-" + str(count) + ".png", format='png')
+        count += 1
+
+        g.colour_region(region)
+
+        for e in closedPathRegion:
+            g.colour_edge(e, pause=0.1)
+            # plt.savefig("Figures/frame-" + str(count) + ".png", format='png')
+            count += 1
+
+        # for e in reversedPath:
+        #     g.colour_edge(e, pause=0.1)
+
+        # plt.pause(5)
         # add generator to the list of generators
         generators += [generator]
         # region = region[shift:]+region[:shift]
@@ -165,7 +183,7 @@ def find_basis(g, edge, vertex_ending, generators=[], source_path=[], clockwise=
             vertex_ending = next_edge[0] if next_edge[0] != vertex_ending else next_edge[1]
 
         region = np.roll(region, shift).tolist()  # restore the default value of the region
-        find_basis(g.remove_region(region, source_path[-1]), next_edge, vertex_ending, generators=generators, source_path=source_path, clockwise=clockwise)
+        find_basis(g.remove_region(region, source_path[-1]), next_edge, vertex_ending, generators=generators, source_path=source_path, clockwise=clockwise, initialGraph=initialGraph, count=count)
     else:
         print("No regions")
     return generators
@@ -200,20 +218,21 @@ boundary_vertices = g.get_boundary_vertices(clockwise=False)
 v0 = boundary_vertices[0]
 v1 = boundary_vertices[1]
 edge = [v0, v1] if v0 < v1 else [v1, v0]
-basis = find_basis(g, edge, v1)
-count = 0
-for generator in basis:
-    g.plot_graph(pause=0.1, color=(0, 0, 0, 0.3))
-    #plt.savefig("Figures/Basis/20nodes/frame-"+str(count)+".png", format='png')
-    count += 1
-    # print(generator)
-    for edge in generator:
-        e = copy.deepcopy(edge)
-        if e[0] > e[1]:
-            e.reverse()
-        g.colour_edge(e, pause=0.1)
-        #plt.savefig("Figures/Basis/20nodes/frame-" + str(count) + ".png", format='png')
-        count += 1
+basis = find_basis(g, edge, v1, initialGraph=g)
+############################################################3
+# count = 0
+# for generator in basis:
+#     g.plot_graph(pause=0.1, color=(0, 0, 0, 0.3))
+#     #plt.savefig("Figures/Basis/20nodes/frame-"+str(count)+".png", format='png')
+#     count += 1
+#     # print(generator)
+#     for edge in generator:
+#         e = copy.deepcopy(edge)
+#         if e[0] > e[1]:
+#             e.reverse()
+#         g.colour_edge(e, pause=0.1)
+#         #plt.savefig("Figures/Basis/20nodes/frame-" + str(count) + ".png", format='png')
+#         count += 1
 ############################################################3
 # comb = basis[0]
 # count = 0

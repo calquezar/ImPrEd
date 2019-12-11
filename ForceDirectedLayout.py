@@ -448,7 +448,7 @@ class ForceDirectedLayout:
             # Plot
             if self.graph.plot:
                 self.graph.plot_graph(0.01)
-                plt.savefig("Figures/LayoutExamples/100nodes/frame-" + str(it) + ".png", format='png')
+                #plt.savefig("Figures/LayoutExamples/100nodes/frame-" + str(it) + ".png", format='png')
 
             # if self.graph.count_edge_crossings() > 0:
             #     print("Deberia haber avisado antes")
