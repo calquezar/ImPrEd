@@ -119,7 +119,7 @@ class ForceDirectedLayout:
         """
         return math.sqrt((v1[0] - v2[0]) ** 2 + (v1[1] - v2[1]) ** 2)
 
-    def _forces_calculation(self, set_of_vertices):
+    def _forces_calculation(self, set_of_vertices, it):
         r"""
             Return the corresponding forces for each vertex
 
@@ -239,12 +239,14 @@ class ForceDirectedLayout:
         r"""
             Return the attraction force between vertices v1 and v2.
         """
+        # return np.array([-0.1, -0.1])
         d = self._dist(v1, v2)
         fx = (d / self.beta) * (v2[0] - v1[0])
         fy = (d / self.beta) * (v2[1] - v1[1])
         return [fx, fy]
 
     def _node_node_repulsion(self, v1, v2):
+        # return np.array([0.001,0.001])
         r"""
             Return the repulsion force between vertices v1 and v2.
         """
@@ -415,10 +417,14 @@ class ForceDirectedLayout:
         """
         # self.graph.make_convex_boundary()
         for it in range(self.maxIter):
+            # if it > 50:
+            #     self.beta = 100000#*self.graph.calculate_scale()
+            #     self.delta = 10
+            #     self.gamma = 0
             print("Iter: " + str(it))
             stop = self.graph.get_stop_criteria()
             std, normalized_std, region = self.graph.get_std_area()
-            print("std: "+str(normalized_std))
+            # print("std: "+str(normalized_std))
             # print("Iter: " + str(it) + "; Crossings: " + str(self.graph.count_edge_crossings()) + \
             #       "; Regions: " + str(len(self.graph.regions)))
             # q_tree = QuadTree(QT.arrayToList(self.graph.vertices))
@@ -433,13 +439,18 @@ class ForceDirectedLayout:
             # Step 0 Project boundary to circumcircle
             # self.graph.project_boundary_to_circumcircle()
             # Step 1
-            forces = self._forces_calculation(set_of_vertices)
+            forces = self._forces_calculation(set_of_vertices,it)
+            # print(forces)
             # Step 2
             # safe_displacements = self._calculate_maximum_movements(set_of_vertices)
             # Step 3
             # self._move_nodes(set_of_vertices, forces, safe_displacements)
             self._move(set_of_vertices, forces, it)
-            #self.graph.project_boundary_to_circumcircle()
+            if it > 30:
+                self.graph.project_boundary_to_circumcircle()
+                self.delta = 0.1
+                self.gamma = 0.1
+                self.beta = 100000
             stop = self.graph.get_stop_criteria()
             # print(stop)
             # crossings = self.graph.count_edge_crossings()

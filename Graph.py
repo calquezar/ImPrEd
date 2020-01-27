@@ -64,7 +64,7 @@ def addLimitPoints(points):
     
 class Graph:
 
-    def __init__(self, vor, clockwise=False):
+    def __init__(self, vor, braidInfo = [], clockwise=False):
         r"""
             Constructor
         """
@@ -72,6 +72,7 @@ class Graph:
         self.edges = [copy.deepcopy(x) for x in vor.ridge_vertices if -1 not in x]
         self.regions = [copy.deepcopy(x) for x in vor.regions if -1 not in x]
         self.regions = [copy.deepcopy(x) for x in self.regions if x]  # remove empty list
+        self.braidInfo = copy.deepcopy(braidInfo)
         self.sort_all_regions(clockwise)
         self.boundary = self.get_boundary_vertices(clockwise)
         self.plot = False
@@ -409,14 +410,33 @@ class Graph:
         r"""
             Plot graph
         """
-        # plt.clf()
+        plt.clf()
         plt.axis('off')
         for e in self.edges:
             v0 = self.vertices[e[0]]
             v1 = self.vertices[e[1]]
             x = [v0[0], v1[0]]
             y = [v0[1], v1[1]]
+            vx = x[1]-x[0]
+            vy = y[1]-y[0]
+            angle = np.arctan2(vy,vx)
             plt.plot(x, y, color=color)
+            #plot arrows
+            i = self.braidInfo[0].index(e)
+            braidCrossings = self.braidInfo[1][i]
+            for j in range(len(braidCrossings)):
+                b = braidCrossings[j]
+                if b:
+                    posRel = (j+1)/(len(braidCrossings)+1)
+                    d = 1
+                    length = np.sqrt((x[1]-x[0])**2+(y[1]-y[0])**2)
+                    dx = d*(y[0]-y[1])/length
+                    dy = d*(x[1]- x[0])/length
+                    mx = x[0] + length*posRel*np.cos(angle)
+                    my = y[0] + length*posRel*np.sin(angle)
+                    # print(posRel,mx,my, dx, dy)
+                    plt.arrow(mx, my,dx,dy, color='red', width=0.01, head_width=0.01, head_length=0.01)
+                    plt.annotate(np.abs(b), (mx+dx/2,my+dy))
         axes = plt.gca()
         if self.fix_axes:
             xmin = np.amin(self.vertices[:, 0])
