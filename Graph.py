@@ -428,14 +428,14 @@ class Graph:
                 b = braidCrossings[j]
                 if b:
                     posRel = (j+1)/(len(braidCrossings)+1)
-                    d = 1
+                    d = 2
                     length = np.sqrt((x[1]-x[0])**2+(y[1]-y[0])**2)
                     dx = d*(y[0]-y[1])/length
                     dy = d*(x[1]- x[0])/length
                     mx = x[0] + length*posRel*np.cos(angle)
                     my = y[0] + length*posRel*np.sin(angle)
                     # print(posRel,mx,my, dx, dy)
-                    plt.arrow(mx, my,dx,dy, color='red', width=0.01, head_width=0.01, head_length=0.01)
+                    plt.arrow(mx-dx/2, my-dy/2,dx,dy, color='red', width=0.015, head_width=0.3, head_length=0.3)
                     plt.annotate(np.abs(b), (mx+dx/2,my+dy))
         axes = plt.gca()
         if self.fix_axes:
@@ -544,8 +544,8 @@ class Graph:
             self.vertices[i] = [radius*math.cos(angle), radius*math.sin(angle)]
         # normalize all vertices to the circumference of radius 100
         for i in range(len(self.vertices)):
-            self.vertices[i][0] /= radius/100  # normalized in the range [0, 100]
-            self.vertices[i][1] /= radius/100  # normalized in the range [0, 100]
+            self.vertices[i][0] /= radius/50  # normalized in the range [0, 100]
+            self.vertices[i][1] /= radius/50  # normalized in the range [0, 100]
         #######
         # for v in boundary_vertices:
         #     self.vertices[v] = new_vertices.pop()

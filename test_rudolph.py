@@ -7,6 +7,9 @@ from scipy.spatial import Voronoi, voronoi_plot_2d
 from Graph import Graph, addLimitPoints
 from ForceDirectedLayout import ForceDirectedLayout
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import animation
+from matplotlib.animation import FuncAnimation
 
 #############################################################
 
@@ -42,13 +45,23 @@ braidInfo = [braidEdges, braidCrossings]
 
 g = Graph(vor,braidInfo)
 g.plot_graph()
-g.plot = True
+g.plot = False
 # Force algorithm
 maxIter = 107
-# maxIter = 2
+# maxIter = 4
 tol = 0.2
 beta = 1000*g.calculate_scale()  # node_node_attraction
 delta = 0.001  # node_node_repulsion
 gamma = 0.01 # node_edge_repulsion
 f = ForceDirectedLayout(g, beta, delta, gamma, maxIter, opt=True)
 f.run()
+
+def update(i):
+    f.histGraphs[i].plot_graph()
+
+if __name__ == '__main__':
+    # FuncAnimation will call the 'update' function for each frame; here
+    # animating over 10 frames, with an interval of 200ms between frames.
+    anim = FuncAnimation(plt.figure(), update, frames=np.arange(0, maxIter), interval=200, repeat=False)
+
+    anim.save('graph2.gif', dpi=80)

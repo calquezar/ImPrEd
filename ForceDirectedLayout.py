@@ -410,7 +410,7 @@ class ForceDirectedLayout:
     #     return ve
 
     def run(self, tol=1):
-        histGraphs = []
+        self.histGraphs = []
         histSTDs = []
         r"""
             Return the lowest displacements for each direction
@@ -437,7 +437,7 @@ class ForceDirectedLayout:
             set_of_vertices = range(len(self.graph.vertices))
             # set_of_vertices = region
             # Step 0 Project boundary to circumcircle
-            # self.graph.project_boundary_to_circumcircle()
+            self.graph.project_boundary_to_circumcircle()
             # Step 1
             forces = self._forces_calculation(set_of_vertices,it)
             # print(forces)
@@ -447,7 +447,7 @@ class ForceDirectedLayout:
             # self._move_nodes(set_of_vertices, forces, safe_displacements)
             self._move(set_of_vertices, forces, it)
             if it > 30:
-                self.graph.project_boundary_to_circumcircle()
+                # self.graph.project_boundary_to_circumcircle()
                 self.delta = 0.1
                 self.gamma = 0.1
                 self.beta = 100000
@@ -465,7 +465,7 @@ class ForceDirectedLayout:
             #     print("Deberia haber avisado antes")
             #     break
             # save current graph
-            # histGraphs.append(self.graph.copy())
+            self.histGraphs.append(self.graph.copy())
             histSTDs.append(stop)
         return histSTDs
 
